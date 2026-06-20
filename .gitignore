@@ -1,0 +1,8 @@
+.aider*
+bin/
+obj/
+*.user
+.vs/
+.idea/
+*.suo
+TestResults/

@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>Jellyfin.Plugin.WikipediaEpisodeOrder</AssemblyName>
+    <RootNamespace>Jellyfin.Plugin.WikipediaEpisodeOrder</RootNamespace>
+    <TargetFramework>net8.0</TargetFramework>
+    <Version>1.0.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>CS1591</NoWarn>
+    <Authors>Neil Manfred</Authors>
+    <Company>Neil Manfred</Company>
+    <Copyright>Copyright © Neil Manfred</Copyright>
+    <Description>Jellyfin plugin that uses Wikipedia episode lists to define TV show playback ordering.</Description>
+    <PackageProjectUrl>https://github.com/neilmanfredit/wikiepisodeorder-jellyfin-plugin</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/neilmanfredit/wikiepisodeorder-jellyfin-plugin</RepositoryUrl>
+    <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Jellyfin.Model" Version="10.10.7" />
+    <PackageReference Include="Jellyfin.Common" Version="10.10.7" />
+    <PackageReference Include="Jellyfin.Controller" Version="10.10.7" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.72" />
+    <PackageReference Include="AngleSharp" Version="1.1.2" />
+    <PackageReference Include="FuzzySharp" Version="2.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Web\configPage.html" />
+    <EmbeddedResource Include="Web\configPage.js" />
+    <EmbeddedResource Include="Web\orderPreview.html" />
+    <EmbeddedResource Include="Web\orderPreview.js" />
+  </ItemGroup>
+
+</Project>
