@@ -1,0 +1,10 @@
+{
+  "Name": "Wikipedia Episode Order",
+  "Guid": "a8cba4a4-65b8-4a7e-9f0e-b3e56b6e3b7b",
+  "Version": "1.0.0.0",
+  "TargetAbi": "10.10.0.0",
+  "Description": "Allows users to use Wikipedia episode-list pages as the authoritative source for TV show playback ordering.",
+  "Category": "Metadata",
+  "Owner": "Neil Manfred",
+  "Image": "icon.png"
+}
