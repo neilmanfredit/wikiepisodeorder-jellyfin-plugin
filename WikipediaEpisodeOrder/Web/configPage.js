@@ -176,23 +176,15 @@
         if (!btn) return;
         var action = btn.getAttribute('data-action');
         var index = parseInt(btn.getAttribute('data-index'), 10);
-        if (action === 'edit')    showForm(index);
-        if (action === 'delete')  deleteMapping(index);
-        if (action === 'refresh') refreshMapping(index);
-        if (action === 'preview') previewMapping(index);
+        if (action === 'edit')           showForm(index);
+        if (action === 'delete')         deleteMapping(index);
+        if (action === 'refresh')        refreshMapping(index);
+        if (action === 'preview')        previewMapping(index);
+        if (action === 'add-mapping')    showForm();
+        if (action === 'save-mapping')   saveMapping();
+        if (action === 'cancel-mapping') hideForm();
+        if (action === 'save-all')       saveConfiguration();
     });
-
-    var btnAdd = qs('#btnAddMapping');
-    if (btnAdd) btnAdd.addEventListener('click', function () { showForm(); });
-
-    var btnSave = qs('#btnSaveMapping');
-    if (btnSave) btnSave.addEventListener('click', saveMapping);
-
-    var btnCancel = qs('#btnCancelMapping');
-    if (btnCancel) btnCancel.addEventListener('click', hideForm);
-
-    var btnSaveAll = qs('#btnSaveAll');
-    if (btnSaveAll) btnSaveAll.addEventListener('click', saveConfiguration);
 
     // Load on page enter
     document.addEventListener('pageshow', function (e) {
