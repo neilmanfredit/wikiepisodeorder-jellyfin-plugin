@@ -4,7 +4,7 @@ A [Jellyfin](https://jellyfin.org) plugin that uses Wikipedia episode-list pages
 
 **Author:** Neil Manfred  
 **Repository:** https://github.com/neilmanfredit/wikiepisodeorder-jellyfin-plugin  
-**License:** GPL-3.0  
+**License:** CC BY-NC-ND 4.0 (non-commercial, no derivatives)  
 **Minimum Jellyfin:** 10.10.0  
 **Target Framework:** .NET 8.0
 
@@ -272,4 +272,4 @@ dotnet test WikipediaEpisodeOrder.sln -c Release
 
 ## License
 
-Copyright © Neil Manfred. Licensed under the [GNU General Public License v3.0](LICENSE).
+Copyright © Neil Manfred. Licensed under the [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](LICENSE). Commercial use and derivative works are not permitted.

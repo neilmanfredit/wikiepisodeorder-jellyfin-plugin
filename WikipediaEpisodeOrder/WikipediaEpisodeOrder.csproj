@@ -17,7 +17,7 @@
     <Description>Jellyfin plugin that uses Wikipedia episode lists to define TV show playback ordering.</Description>
     <PackageProjectUrl>https://github.com/neilmanfredit/wikiepisodeorder-jellyfin-plugin</PackageProjectUrl>
     <RepositoryUrl>https://github.com/neilmanfredit/wikiepisodeorder-jellyfin-plugin</RepositoryUrl>
-    <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,6 +29,10 @@
     <PackageReference Include="FuzzySharp" Version="2.0.2" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
