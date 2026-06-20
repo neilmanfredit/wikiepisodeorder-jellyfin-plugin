@@ -1,0 +1,96 @@
+name: Build, Test, and Package
+
+on:
+  push:
+    branches: [ main, staging, "feature/**" ]
+  pull_request:
+    branches: [ main, staging ]
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build-and-test:
+    name: Build & Test (.NET 8 / 10)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8 SDK (plugin target)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup .NET 10 SDK (test runner)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore WikipediaEpisodeOrder.sln
+
+      - name: Build (Release)
+        run: dotnet build WikipediaEpisodeOrder.sln -c Release --no-restore
+
+      - name: Run tests
+        run: dotnet test WikipediaEpisodeOrder.sln -c Release --no-build \
+               --logger "trx;LogFileName=test-results.trx" \
+               --results-directory ./TestResults \
+               --collect:"XPlat Code Coverage"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/
+
+  package:
+    name: Package Plugin Artifact
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore WikipediaEpisodeOrder.sln
+
+      - name: Build Release
+        run: dotnet build WikipediaEpisodeOrder.sln -c Release --no-restore
+
+      - name: Collect plugin DLLs
+        run: |
+          mkdir -p artifacts/plugin
+          cp WikipediaEpisodeOrder/bin/Release/net8.0/Jellyfin.Plugin.WikipediaEpisodeOrder.dll artifacts/plugin/
+          cp WikipediaEpisodeOrder/bin/Release/net8.0/HtmlAgilityPack.dll artifacts/plugin/ 2>/dev/null || true
+          cp WikipediaEpisodeOrder/bin/Release/net8.0/AngleSharp.dll artifacts/plugin/ 2>/dev/null || true
+          cp WikipediaEpisodeOrder/bin/Release/net8.0/FuzzySharp.dll artifacts/plugin/ 2>/dev/null || true
+
+      - name: Extract version
+        id: version
+        run: |
+          VERSION=$(grep -oP '(?<=<Version>)[^<]+' WikipediaEpisodeOrder/WikipediaEpisodeOrder.csproj | head -1)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create plugin zip
+        run: |
+          cd artifacts
+          zip -r "WikipediaEpisodeOrder_${{ steps.version.outputs.version }}.zip" plugin/
+
+      - name: Upload plugin artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WikipediaEpisodeOrder-${{ steps.version.outputs.version }}
+          path: artifacts/WikipediaEpisodeOrder_${{ steps.version.outputs.version }}.zip
+          retention-days: 90
