@@ -313,7 +313,12 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Services
                     prodCode = code;
             }
 
-            bool isSpecial = isSectionSpecial || season == null && !HasSeasonFromOtherHints(cells, columns);
+            // Mark as special if the section heading says so.
+            // Only additionally mark as special when there IS an explicit season column
+            // whose value is null — absence of a season column alone is not sufficient
+            // (many regular-episode tables simply don't include a season column).
+            bool isSpecial = isSectionSpecial
+                || (columns.SeasonIndex >= 0 && season == null);
 
             return new WikiEpisode
             {
@@ -366,13 +371,17 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Services
             if (titleNode != null)
             {
                 var raw = CleanText(titleNode.InnerText);
-                var match = Regex.Match(raw, @"List of (.+?) episodes", RegexOptions.IgnoreCase);
-                if (match.Success)
-                    return match.Groups[1].Value.Trim();
+                if (!string.IsNullOrWhiteSpace(raw))
+                {
+                    var match = Regex.Match(raw, @"List of (.+?) episodes", RegexOptions.IgnoreCase);
+                    if (match.Success)
+                        return match.Groups[1].Value.Trim();
 
-                // Remove " - Wikipedia" suffix
-                raw = Regex.Replace(raw, @"\s*[-–|]\s*Wikipedia.*$", string.Empty, RegexOptions.IgnoreCase).Trim();
-                return raw;
+                    // Remove " - Wikipedia" suffix
+                    raw = Regex.Replace(raw, @"\s*[-–|]\s*Wikipedia.*$", string.Empty, RegexOptions.IgnoreCase).Trim();
+                    if (!string.IsNullOrWhiteSpace(raw))
+                        return raw;
+                }
             }
 
             // Fallback: h1
@@ -383,7 +392,8 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Services
                 var match = Regex.Match(raw, @"List of (.+?) episodes", RegexOptions.IgnoreCase);
                 if (match.Success)
                     return match.Groups[1].Value.Trim();
-                return raw;
+                if (!string.IsNullOrWhiteSpace(raw))
+                    return raw;
             }
 
             return string.Empty;
