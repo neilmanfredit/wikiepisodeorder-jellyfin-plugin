@@ -2,16 +2,99 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Wikipedia Episode Order - Configuration</title>
+    <title>Wikipedia Episode Order</title>
 </head>
 <body>
-    <div id="WikipediaEpisodeOrderConfigPage" data-role="page" class="page type-interior plugin-config-page">
-        <div data-role="content">
-            <div class="content-primary">
-                <p>Wikipedia Episode Order plugin configuration loading...</p>
+<div id="WikipediaEpisodeOrderConfigPage"
+     data-role="page"
+     class="page type-interior plugin-config-page"
+     data-require="emby-input,emby-button,emby-select,emby-checkbox">
+
+    <div data-role="content">
+        <div class="content-primary">
+
+            <div class="verticalSection">
+                <div class="sectionTitleContainer flex align-items-center">
+                    <h2 class="sectionTitle">Wikipedia Episode Order</h2>
+                </div>
+                <p class="fieldDescription">
+                    Configure TV series to use Wikipedia episode order for playback sequencing.
+                    Specials and TV movies are placed in their correct chronological positions.
+                </p>
             </div>
+
+            <div class="verticalSection">
+                <h3 class="sectionTitle">Series Mappings</h3>
+                <p class="fieldDescription">
+                    Each mapping links a Jellyfin series to its Wikipedia episode list URL.
+                </p>
+
+                <div id="mappingList" class="paperList"></div>
+
+                <br>
+                <button id="btnAddMapping" is="emby-button" type="button" class="raised block">
+                    <span>Add Series Mapping</span>
+                </button>
+            </div>
+
+            <!-- Add / Edit Mapping Form -->
+            <div id="mappingForm" class="verticalSection" style="display:none;">
+                <h3 id="mappingFormTitle" class="sectionTitle">Add Mapping</h3>
+
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="seriesId">Jellyfin Series ID</label>
+                    <input id="seriesId" type="text" is="emby-input" placeholder="Paste Series GUID here" />
+                    <div class="fieldDescription">Found in the series URL or library info page.</div>
+                </div>
+
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="seriesName">Series Name</label>
+                    <input id="seriesName" type="text" is="emby-input" placeholder="e.g. Only Fools and Horses" />
+                </div>
+
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="wikiUrl">Wikipedia Episode List URL</label>
+                    <input id="wikiUrl" type="url" is="emby-input"
+                           placeholder="https://en.wikipedia.org/wiki/List_of_..._episodes" />
+                    <div class="fieldDescription">
+                        Must be the full Wikipedia page URL for the episode list.
+                    </div>
+                </div>
+
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
+                        <input id="autoRefresh" type="checkbox" is="emby-checkbox" />
+                        <span>Enable Auto Refresh</span>
+                    </label>
+                    <div class="fieldDescription">Automatically refresh Wikipedia data on a schedule.</div>
+                </div>
+
+                <div class="inputContainer">
+                    <label class="inputLabel inputLabelUnfocused" for="refreshDays">Refresh Interval (days)</label>
+                    <input id="refreshDays" type="number" is="emby-input" value="7" min="1" max="365" />
+                </div>
+
+                <div class="formButtons" style="margin-top:1em;">
+                    <button id="btnSaveMapping" is="emby-button" type="button" class="raised button-submit">
+                        <span>Save</span>
+                    </button>
+                    <button id="btnCancelMapping" is="emby-button" type="button" class="raised">
+                        <span>Cancel</span>
+                    </button>
+                </div>
+
+                <input id="editingSeriesId" type="hidden" value="" />
+            </div>
+
+            <div class="verticalSection">
+                <button id="btnSaveAll" is="emby-button" type="button" class="raised button-submit block">
+                    <span>Save Configuration</span>
+                </button>
+            </div>
+
         </div>
     </div>
-    <script src="configPage.js"></script>
+</div>
+<script src="configPage.js"></script>
 </body>
 </html>

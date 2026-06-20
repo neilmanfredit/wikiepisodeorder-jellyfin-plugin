@@ -3,15 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <title>Wikipedia Episode Order - Preview</title>
+    <style>
+        .weo-legend { display:flex; gap:1em; margin:0.5em 0 1em; flex-wrap:wrap; }
+        .weo-dot { display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:4px; vertical-align:middle; }
+        .weo-dot-matched  { background:#4caf50; }
+        .weo-dot-partial  { background:#ff9800; }
+        .weo-dot-unmatched{ background:#f44336; }
+        .weo-table { width:100%; border-collapse:collapse; margin-top:0.5em; }
+        .weo-table th, .weo-table td { padding:0.5em 0.75em; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1); }
+        .weo-table th { font-weight:600; }
+        .weo-row-matched   { }
+        .weo-row-partial   { opacity:0.85; }
+        .weo-row-unmatched { opacity:0.6; }
+        .weo-badge { display:inline-block; padding:2px 6px; border-radius:3px; font-size:0.75em; font-weight:600; }
+        .weo-badge-matched  { background:#4caf50; color:#fff; }
+        .weo-badge-partial  { background:#ff9800; color:#fff; }
+        .weo-badge-unmatched{ background:#f44336; color:#fff; }
+        .weo-badge-special  { background:#9c27b0; color:#fff; margin-left:4px; }
+        .weo-stats { display:flex; gap:2em; flex-wrap:wrap; margin-bottom:1em; }
+        .weo-stat  { text-align:center; }
+        .weo-stat-value { font-size:2em; font-weight:700; }
+        .weo-stat-label { font-size:0.8em; opacity:0.7; }
+    </style>
 </head>
 <body>
-    <div id="WikipediaEpisodeOrderPreviewPage" data-role="page" class="page type-interior">
-        <div data-role="content">
-            <div class="content-primary">
-                <p>Episode order preview loading...</p>
+<div id="WikipediaEpisodeOrderPreviewPage"
+     data-role="page"
+     class="page type-interior">
+
+    <div data-role="content">
+        <div class="content-primary">
+
+            <div class="verticalSection">
+                <div class="sectionTitleContainer flex align-items-center">
+                    <button is="emby-button" class="paper-icon-button-light btnBack" onclick="history.back()" title="Back">
+                        <span class="material-icons">arrow_back</span>
+                    </button>
+                    <h2 class="sectionTitle" id="pageTitle">Episode Order Preview</h2>
+                </div>
             </div>
+
+            <div id="loadingMsg" class="verticalSection"><p>Loading…</p></div>
+
+            <div id="previewContent" style="display:none;">
+                <div class="verticalSection">
+                    <div class="weo-stats">
+                        <div class="weo-stat">
+                            <div class="weo-stat-value" id="statMatched" style="color:#4caf50">—</div>
+                            <div class="weo-stat-label">Matched</div>
+                        </div>
+                        <div class="weo-stat">
+                            <div class="weo-stat-value" id="statUnmatched" style="color:#f44336">—</div>
+                            <div class="weo-stat-label">Unmatched</div>
+                        </div>
+                        <div class="weo-stat">
+                            <div class="weo-stat-value" id="statTotal">—</div>
+                            <div class="weo-stat-label">Total Episodes</div>
+                        </div>
+                        <div class="weo-stat">
+                            <div class="weo-stat-value" id="statRefresh" style="font-size:1em;">—</div>
+                            <div class="weo-stat-label">Last Refresh</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="verticalSection">
+                    <div class="weo-legend">
+                        <span><span class="weo-dot weo-dot-matched"></span>Matched</span>
+                        <span><span class="weo-dot weo-dot-partial"></span>Partial (&lt;95%)</span>
+                        <span><span class="weo-dot weo-dot-unmatched"></span>Unmatched</span>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table class="weo-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Wikipedia Title</th>
+                                    <th>Jellyfin Title</th>
+                                    <th>Status</th>
+                                    <th>Confidence</th>
+                                    <th>Method</th>
+                                </tr>
+                            </thead>
+                            <tbody id="previewTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="verticalSection" style="margin-top:1em;">
+                    <button id="btnRefreshNow" is="emby-button" type="button" class="raised">
+                        <span class="material-icons" style="margin-right:4px;vertical-align:middle;">refresh</span>
+                        Refresh from Wikipedia
+                    </button>
+                </div>
+            </div>
+
+            <div id="errorMsg" style="display:none;" class="verticalSection">
+                <p id="errorText" style="color:#f44336;"></p>
+                <button is="emby-button" type="button" class="raised" onclick="history.back()">Back</button>
+            </div>
+
         </div>
     </div>
-    <script src="orderPreview.js"></script>
+</div>
+<script src="orderPreview.js"></script>
 </body>
 </html>
