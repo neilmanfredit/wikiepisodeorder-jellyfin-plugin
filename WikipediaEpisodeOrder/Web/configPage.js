@@ -1,25 +1,46 @@
 /* Wikipedia Episode Order - Configuration Page */
-(function () {
-    'use strict';
 
-    var apiBase = '/WikipediaOrder';
-    var mappings = [];
-    var editingIndex = -1;
+function escapeHtml(str) {
+    return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
-    function qs(selector) {
-        return document.querySelector(selector);
+export default class WikipediaEpisodeOrderConfigPage {
+    constructor(view, params) {
+        this._view = view;
+        this._mappings = [];
+        this._editingIndex = -1;
+        this._apiBase = '/WikipediaOrder';
+
+        window.WikipediaEpisodeOrderPage = {
+            showForm: (index) => this.showForm(index),
+            hideForm: () => this.hideForm(),
+            saveMapping: () => this.saveMapping(),
+            deleteMapping: (index) => this.deleteMapping(index),
+            refreshMapping: (index) => this.refreshMapping(index),
+            previewMapping: (index) => this.previewMapping(index),
+            saveConfiguration: () => this.saveConfiguration(),
+            loadConfiguration: () => this.loadConfiguration()
+        };
+
+        view.addEventListener('viewshow', () => {
+            this.loadConfiguration();
+        });
     }
 
-    function renderMappings() {
-        var list = qs('#mappingList');
+    qs(selector) {
+        return this._view.querySelector(selector);
+    }
+
+    renderMappings() {
+        var list = this.qs('#mappingList');
         if (!list) return;
 
-        if (mappings.length === 0) {
+        if (this._mappings.length === 0) {
             list.innerHTML = '<p class="fieldDescription">No series mappings configured.</p>';
             return;
         }
 
-        list.innerHTML = mappings.map(function (m, i) {
+        list.innerHTML = this._mappings.map((m, i) => {
             return '<div class="listItem listItem-border" style="padding:1em;margin-bottom:0.5em;">' +
                 '<div class="listItemBody">' +
                 '<h3 class="listItemBodyText">' + escapeHtml(m.seriesName || 'Unnamed') + '</h3>' +
@@ -36,155 +57,126 @@
         }).join('');
     }
 
-    function showForm(index) {
-        var form = qs('#mappingForm');
+    showForm(index) {
+        var form = this.qs('#mappingForm');
         if (!form) return;
         form.style.display = 'block';
-        editingIndex = (typeof index === 'number') ? index : -1;
+        this._editingIndex = (typeof index === 'number') ? index : -1;
 
-        if (editingIndex >= 0 && mappings[editingIndex]) {
-            var m = mappings[editingIndex];
-            qs('#mappingFormTitle').textContent = 'Edit Mapping';
-            qs('#seriesId').value = m.seriesId || '';
-            qs('#seriesName').value = m.seriesName || '';
-            qs('#wikiUrl').value = m.wikipediaUrl || '';
-            qs('#autoRefresh').checked = !!m.autoRefresh;
-            qs('#refreshDays').value = m.refreshDays || 7;
+        if (this._editingIndex >= 0 && this._mappings[this._editingIndex]) {
+            var m = this._mappings[this._editingIndex];
+            this.qs('#mappingFormTitle').textContent = 'Edit Mapping';
+            this.qs('#seriesId').value = m.seriesId || '';
+            this.qs('#seriesName').value = m.seriesName || '';
+            this.qs('#wikiUrl').value = m.wikipediaUrl || '';
+            this.qs('#autoRefresh').checked = !!m.autoRefresh;
+            this.qs('#refreshDays').value = m.refreshDays || 7;
         } else {
-            qs('#mappingFormTitle').textContent = 'Add Mapping';
-            qs('#seriesId').value = '';
-            qs('#seriesName').value = '';
-            qs('#wikiUrl').value = '';
-            qs('#autoRefresh').checked = false;
-            qs('#refreshDays').value = 7;
+            this.qs('#mappingFormTitle').textContent = 'Add Mapping';
+            this.qs('#seriesId').value = '';
+            this.qs('#seriesName').value = '';
+            this.qs('#wikiUrl').value = '';
+            this.qs('#autoRefresh').checked = false;
+            this.qs('#refreshDays').value = 7;
         }
 
         form.scrollIntoView({ behavior: 'smooth' });
     }
 
-    function hideForm() {
-        var form = qs('#mappingForm');
+    hideForm() {
+        var form = this.qs('#mappingForm');
         if (form) form.style.display = 'none';
-        editingIndex = -1;
+        this._editingIndex = -1;
     }
 
-    function saveMapping() {
-        var seriesId = (qs('#seriesId').value || '').trim();
-        var seriesName = (qs('#seriesName').value || '').trim();
-        var wikiUrl = (qs('#wikiUrl').value || '').trim();
-        var autoRefresh = qs('#autoRefresh').checked;
-        var refreshDays = parseInt(qs('#refreshDays').value, 10) || 7;
+    saveMapping() {
+        var seriesId = (this.qs('#seriesId').value || '').trim();
+        var seriesName = (this.qs('#seriesName').value || '').trim();
+        var wikiUrl = (this.qs('#wikiUrl').value || '').trim();
+        var autoRefresh = this.qs('#autoRefresh').checked;
+        var refreshDays = parseInt(this.qs('#refreshDays').value, 10) || 7;
 
         if (!seriesId || !seriesName || !wikiUrl) {
             alert('Series ID, Series Name, and Wikipedia URL are all required.');
             return;
         }
 
-        var entry = { seriesId: seriesId, seriesName: seriesName, wikipediaUrl: wikiUrl, autoRefresh: autoRefresh, refreshDays: refreshDays, lastUpdatedUtc: null };
+        var entry = { seriesId, seriesName, wikipediaUrl: wikiUrl, autoRefresh, refreshDays, lastUpdatedUtc: null };
 
-        if (editingIndex >= 0) {
-            entry.lastUpdatedUtc = (mappings[editingIndex] || {}).lastUpdatedUtc || null;
-            mappings[editingIndex] = entry;
+        if (this._editingIndex >= 0) {
+            entry.lastUpdatedUtc = (this._mappings[this._editingIndex] || {}).lastUpdatedUtc || null;
+            this._mappings[this._editingIndex] = entry;
         } else {
-            mappings.push(entry);
+            this._mappings.push(entry);
         }
 
-        hideForm();
-        renderMappings();
+        this.hideForm();
+        this.renderMappings();
     }
 
-    function deleteMapping(index) {
-        if (!confirm('Remove mapping for "' + escapeHtml(mappings[index].seriesName) + '"?')) return;
-        mappings.splice(index, 1);
-        renderMappings();
+    deleteMapping(index) {
+        if (!confirm('Remove mapping for "' + escapeHtml(this._mappings[index].seriesName) + '"?')) return;
+        this._mappings.splice(index, 1);
+        this.renderMappings();
     }
 
-    function refreshMapping(index) {
-        var m = mappings[index];
+    refreshMapping(index) {
+        var m = this._mappings[index];
         if (!m || !m.seriesId) { alert('Save configuration before refreshing.'); return; }
         Dashboard.showLoadingMsg();
-        ApiClient.ajax({ type: 'POST', url: ApiClient.getUrl(apiBase + '/' + m.seriesId + '/refresh') })
-            .then(function () {
+        ApiClient.ajax({ type: 'POST', url: ApiClient.getUrl(this._apiBase + '/' + m.seriesId + '/refresh') })
+            .then(() => {
                 Dashboard.hideLoadingMsg();
                 Dashboard.alert('Refresh complete for "' + m.seriesName + '".');
             })
-            .catch(function (err) {
+            .catch((err) => {
                 Dashboard.hideLoadingMsg();
                 Dashboard.alert('Refresh failed: ' + (err.statusText || err));
             });
     }
 
-    function previewMapping(index) {
-        var m = mappings[index];
+    previewMapping(index) {
+        var m = this._mappings[index];
         if (!m || !m.seriesId) { alert('Save configuration and refresh before previewing.'); return; }
-        window.location.href = 'orderPreview.html?seriesId=' + encodeURIComponent(m.seriesId) + '&seriesName=' + encodeURIComponent(m.seriesName);
+        Dashboard.navigate('configurationpage?name=WikipediaEpisodeOrderPreview&seriesId=' +
+            encodeURIComponent(m.seriesId) + '&seriesName=' + encodeURIComponent(m.seriesName));
     }
 
-    function saveConfiguration() {
+    saveConfiguration() {
         Dashboard.showLoadingMsg();
-        ApiClient.getPluginConfiguration('a8cba4a4-65b8-4a7e-9f0e-b3e56b6e3b7b').then(function (config) {
-            config.Mappings = mappings.map(function (m) {
-                return {
-                    SeriesId: m.seriesId,
-                    SeriesName: m.seriesName,
-                    WikipediaUrl: m.wikipediaUrl,
-                    AutoRefresh: m.autoRefresh,
-                    RefreshDays: m.refreshDays,
-                    LastUpdatedUtc: m.lastUpdatedUtc
-                };
-            });
-            ApiClient.updatePluginConfiguration('a8cba4a4-65b8-4a7e-9f0e-b3e56b6e3b7b', config).then(function () {
+        ApiClient.getPluginConfiguration('a8cba4a4-65b8-4a7e-9f0e-b3e56b6e3b7b').then((config) => {
+            config.Mappings = this._mappings.map((m) => ({
+                SeriesId: m.seriesId,
+                SeriesName: m.seriesName,
+                WikipediaUrl: m.wikipediaUrl,
+                AutoRefresh: m.autoRefresh,
+                RefreshDays: m.refreshDays,
+                LastUpdatedUtc: m.lastUpdatedUtc
+            }));
+            ApiClient.updatePluginConfiguration('a8cba4a4-65b8-4a7e-9f0e-b3e56b6e3b7b', config).then(() => {
                 Dashboard.hideLoadingMsg();
                 Dashboard.alert('Configuration saved.');
             });
-        }).catch(function (err) {
+        }).catch((err) => {
             Dashboard.hideLoadingMsg();
             Dashboard.alert('Save failed: ' + (err.statusText || err));
         });
     }
 
-    function loadConfiguration() {
-        ApiClient.getPluginConfiguration('a8cba4a4-65b8-4a7e-9f0e-b3e56b6e3b7b').then(function (config) {
-            mappings = (config.Mappings || []).map(function (m) {
-                return {
-                    seriesId: m.SeriesId,
-                    seriesName: m.SeriesName,
-                    wikipediaUrl: m.WikipediaUrl,
-                    autoRefresh: m.AutoRefresh,
-                    refreshDays: m.RefreshDays,
-                    lastUpdatedUtc: m.LastUpdatedUtc
-                };
-            });
-            renderMappings();
-        }).catch(function () {
-            mappings = [];
-            renderMappings();
+    loadConfiguration() {
+        ApiClient.getPluginConfiguration('a8cba4a4-65b8-4a7e-9f0e-b3e56b6e3b7b').then((config) => {
+            this._mappings = (config.Mappings || []).map((m) => ({
+                seriesId: m.SeriesId,
+                seriesName: m.SeriesName,
+                wikipediaUrl: m.WikipediaUrl,
+                autoRefresh: m.AutoRefresh,
+                refreshDays: m.RefreshDays,
+                lastUpdatedUtc: m.LastUpdatedUtc
+            }));
+            this.renderMappings();
+        }).catch(() => {
+            this._mappings = [];
+            this.renderMappings();
         });
     }
-
-    function escapeHtml(str) {
-        return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-
-    window.WikipediaEpisodeOrderPage = {
-        showForm: showForm,
-        hideForm: hideForm,
-        saveMapping: saveMapping,
-        deleteMapping: deleteMapping,
-        refreshMapping: refreshMapping,
-        previewMapping: previewMapping,
-        saveConfiguration: saveConfiguration,
-        loadConfiguration: loadConfiguration
-    };
-
-    document.addEventListener('pageshow', function (e) {
-        if (e.target && e.target.id === 'WikipediaEpisodeOrderConfigPage') {
-            loadConfiguration();
-        }
-    });
-
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
-        loadConfiguration();
-    }
-
-})();
+}
