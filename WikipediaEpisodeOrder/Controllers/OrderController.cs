@@ -81,7 +81,7 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Controllers
             CancellationToken cancellationToken)
         {
             var config = Plugin.Instance?.Configuration;
-            var mapping = config?.Mappings.FirstOrDefault(m => m.SeriesId == seriesId);
+            var mapping = config?.Mappings.FirstOrDefault(m => string.Equals(m.SeriesId, seriesId.ToString(), StringComparison.OrdinalIgnoreCase));
 
             if (mapping == null)
                 return NotFound(new { message = $"Series {seriesId} is not configured." });
@@ -112,7 +112,7 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Controllers
             CancellationToken cancellationToken)
         {
             var config = Plugin.Instance?.Configuration;
-            if (config?.Mappings.All(m => m.SeriesId != seriesId) != false)
+            if (config?.Mappings.All(m => !string.Equals(m.SeriesId, seriesId.ToString(), StringComparison.OrdinalIgnoreCase)) != false)
                 return NotFound(new { message = $"Series {seriesId} is not configured." });
 
             // Rebuild just re-runs match + order building (cache already has Wikipedia data).
