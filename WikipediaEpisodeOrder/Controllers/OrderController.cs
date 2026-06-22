@@ -38,10 +38,10 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<PreviewResponse>> GetPreview(
-            [FromRoute] Guid seriesId,
+            [FromRoute] string seriesId,
             CancellationToken cancellationToken)
         {
-            var result = await _playbackOrderService.GetPlaybackOrderAsync(seriesId, cancellationToken)
+            var result = await _playbackOrderService.GetPlaybackOrderAsync(Guid.Parse(seriesId), cancellationToken)
                 .ConfigureAwait(false);
 
             if (result.Entries.Count == 0)
@@ -49,7 +49,7 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Controllers
 
             return Ok(new PreviewResponse
             {
-                SeriesId = seriesId,
+                SeriesId = Guid.Parse(seriesId),
                 LastRefreshUtc = result.LastRefreshUtc,
                 MatchedCount = result.MatchedCount,
                 UnmatchedCount = result.UnmatchedCount,
@@ -77,11 +77,11 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult> Refresh(
-            [FromRoute] Guid seriesId,
+            [FromRoute] string seriesId,
             CancellationToken cancellationToken)
         {
             var config = Plugin.Instance?.Configuration;
-            var mapping = config?.Mappings.FirstOrDefault(m => string.Equals(m.SeriesId, seriesId.ToString(), StringComparison.OrdinalIgnoreCase));
+            var mapping = config?.Mappings.FirstOrDefault(m => string.Equals(m.SeriesId, seriesId, StringComparison.OrdinalIgnoreCase));
 
             if (mapping == null)
                 return NotFound(new { message = $"Series {seriesId} is not configured." });
@@ -108,15 +108,15 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult> Rebuild(
-            [FromRoute] Guid seriesId,
+            [FromRoute] string seriesId,
             CancellationToken cancellationToken)
         {
             var config = Plugin.Instance?.Configuration;
-            if (config?.Mappings.All(m => !string.Equals(m.SeriesId, seriesId.ToString(), StringComparison.OrdinalIgnoreCase)) != false)
+            if (config?.Mappings.All(m => !string.Equals(m.SeriesId, seriesId, StringComparison.OrdinalIgnoreCase)) != false)
                 return NotFound(new { message = $"Series {seriesId} is not configured." });
 
             // Rebuild just re-runs match + order building (cache already has Wikipedia data).
-            var result = await _playbackOrderService.GetPlaybackOrderAsync(seriesId, cancellationToken)
+            var result = await _playbackOrderService.GetPlaybackOrderAsync(Guid.Parse(seriesId), cancellationToken)
                 .ConfigureAwait(false);
 
             if (result.Entries.Count == 0)
@@ -131,15 +131,15 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Controllers
         [HttpGet("{seriesId}/status")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<StatusResponse>> GetStatus(
-            [FromRoute] Guid seriesId,
+            [FromRoute] string seriesId,
             CancellationToken cancellationToken)
         {
-            var status = await _playbackOrderService.GetStatusAsync(seriesId, cancellationToken)
+            var status = await _playbackOrderService.GetStatusAsync(Guid.Parse(seriesId), cancellationToken)
                 .ConfigureAwait(false);
 
             return Ok(new StatusResponse
             {
-                SeriesId = seriesId,
+                SeriesId = Guid.Parse(seriesId),
                 CacheExists = status.CacheExists,
                 MatchedCount = status.MatchedCount,
                 UnmatchedCount = status.UnmatchedCount,
@@ -156,10 +156,10 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<PlayQueueResponse>> GetPlayQueue(
-            [FromRoute] Guid seriesId,
+            [FromRoute] string seriesId,
             CancellationToken cancellationToken)
         {
-            var queue = await _playbackOrderService.GetPlayQueueAsync(seriesId, cancellationToken)
+            var queue = await _playbackOrderService.GetPlayQueueAsync(Guid.Parse(seriesId), cancellationToken)
                 .ConfigureAwait(false);
 
             if (queue.Count == 0)
@@ -167,7 +167,7 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Controllers
 
             return Ok(new PlayQueueResponse
             {
-                SeriesId = seriesId,
+                SeriesId = Guid.Parse(seriesId),
                 ItemIds = queue.ToList()
             });
         }
