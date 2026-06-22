@@ -170,12 +170,10 @@
         return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    // Wire up events via delegation on the plugin container using capture phase,
-    // so the handler fires before any bubbling-phase listener on document (e.g. Jellyfin's dashboard handler).
     function attachDelegatedClickHandler() {
         var container = document.getElementById('WikipediaEpisodeOrderConfigPage');
-        var target = container || document;
-        target.addEventListener('click', function (e) {
+        if (!container) return;
+        container.addEventListener('click', function (e) {
             var btn = e.target.closest('[data-action]');
             if (!btn) return;
             var action = btn.getAttribute('data-action');
@@ -190,17 +188,20 @@
             if (action === 'save-all')       saveConfiguration();
         }, true);
     }
-    attachDelegatedClickHandler();
 
     // Load on page enter
     document.addEventListener('pageshow', function (e) {
         if (e.target && e.target.id === 'WikipediaEpisodeOrderConfigPage') {
+            attachDelegatedClickHandler();
             loadConfiguration();
         }
     });
 
     // Immediate load if document already visible
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        if (document.getElementById('WikipediaEpisodeOrderConfigPage')) {
+            attachDelegatedClickHandler();
+        }
         loadConfiguration();
     }
 
