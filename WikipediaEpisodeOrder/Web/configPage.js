@@ -6,12 +6,8 @@
     var mappings = [];
     var editingIndex = -1;
 
-    function getPageElement(view) {
-        return view || document;
-    }
-
-    function qs(selector, context) {
-        return (context || document).querySelector(selector);
+    function qs(selector) {
+        return document.querySelector(selector);
     }
 
     function renderMappings() {
@@ -31,10 +27,10 @@
                 '<div class="listItemBodyText secondary">Auto refresh: ' + (m.autoRefresh ? 'Every ' + m.refreshDays + ' days' : 'Off') + '</div>' +
                 '</div>' +
                 '<div class="listItemButtons">' +
-                '<button is="emby-button" data-action="preview" data-index="' + i + '" class="listItemButton paper-icon-button-light" title="Preview Order"><span class="material-icons">visibility</span></button>' +
-                '<button is="emby-button" data-action="refresh" data-index="' + i + '" class="listItemButton paper-icon-button-light" title="Refresh Now"><span class="material-icons">refresh</span></button>' +
-                '<button is="emby-button" data-action="edit" data-index="' + i + '" class="listItemButton paper-icon-button-light" title="Edit"><span class="material-icons">edit</span></button>' +
-                '<button is="emby-button" data-action="delete" data-index="' + i + '" class="listItemButton paper-icon-button-light" title="Delete"><span class="material-icons">delete</span></button>' +
+                '<button is="emby-button" onclick="WikipediaEpisodeOrderPage.previewMapping(' + i + ')" class="listItemButton paper-icon-button-light" title="Preview Order"><span class="material-icons">visibility</span></button>' +
+                '<button is="emby-button" onclick="WikipediaEpisodeOrderPage.refreshMapping(' + i + ')" class="listItemButton paper-icon-button-light" title="Refresh Now"><span class="material-icons">refresh</span></button>' +
+                '<button is="emby-button" onclick="WikipediaEpisodeOrderPage.showForm(' + i + ')" class="listItemButton paper-icon-button-light" title="Edit"><span class="material-icons">edit</span></button>' +
+                '<button is="emby-button" onclick="WikipediaEpisodeOrderPage.deleteMapping(' + i + ')" class="listItemButton paper-icon-button-light" title="Delete"><span class="material-icons">delete</span></button>' +
                 '</div>' +
                 '</div>';
         }).join('');
@@ -170,38 +166,24 @@
         return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    function attachDelegatedClickHandler() {
-        var container = document.getElementById('WikipediaEpisodeOrderConfigPage');
-        if (!container) return;
-        container.addEventListener('click', function (e) {
-            var btn = e.target.closest('[data-action]');
-            if (!btn) return;
-            var action = btn.getAttribute('data-action');
-            var index = parseInt(btn.getAttribute('data-index'), 10);
-            if (action === 'edit')           showForm(index);
-            if (action === 'delete')         deleteMapping(index);
-            if (action === 'refresh')        refreshMapping(index);
-            if (action === 'preview')        previewMapping(index);
-            if (action === 'add-mapping')    showForm();
-            if (action === 'save-mapping')   saveMapping();
-            if (action === 'cancel-mapping') hideForm();
-            if (action === 'save-all')       saveConfiguration();
-        }, true);
-    }
+    window.WikipediaEpisodeOrderPage = {
+        showForm: showForm,
+        hideForm: hideForm,
+        saveMapping: saveMapping,
+        deleteMapping: deleteMapping,
+        refreshMapping: refreshMapping,
+        previewMapping: previewMapping,
+        saveConfiguration: saveConfiguration,
+        loadConfiguration: loadConfiguration
+    };
 
-    // Load on page enter
     document.addEventListener('pageshow', function (e) {
         if (e.target && e.target.id === 'WikipediaEpisodeOrderConfigPage') {
-            attachDelegatedClickHandler();
             loadConfiguration();
         }
     });
 
-    // Immediate load if document already visible
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
-        if (document.getElementById('WikipediaEpisodeOrderConfigPage')) {
-            attachDelegatedClickHandler();
-        }
         loadConfiguration();
     }
 

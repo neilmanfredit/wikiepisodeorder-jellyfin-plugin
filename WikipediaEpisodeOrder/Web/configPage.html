@@ -32,7 +32,7 @@
                 <div id="mappingList" class="paperList"></div>
 
                 <br>
-                <button id="btnAddMapping" is="emby-button" type="button" class="raised block" data-action="add-mapping">
+                <button id="btnAddMapping" is="emby-button" type="button" class="raised block" onclick="WikipediaEpisodeOrderPage.showForm()">
                     <span>Add Series Mapping</span>
                 </button>
             </div>
@@ -75,10 +75,10 @@
                 </div>
 
                 <div class="formButtons" style="margin-top:1em;">
-                    <button id="btnSaveMapping" is="emby-button" type="button" class="raised button-submit" data-action="save-mapping">
+                    <button id="btnSaveMapping" is="emby-button" type="button" class="raised button-submit" onclick="WikipediaEpisodeOrderPage.saveMapping()">
                         <span>Save</span>
                     </button>
-                    <button id="btnCancelMapping" is="emby-button" type="button" class="raised" data-action="cancel-mapping">
+                    <button id="btnCancelMapping" is="emby-button" type="button" class="raised" onclick="WikipediaEpisodeOrderPage.hideForm()">
                         <span>Cancel</span>
                     </button>
                 </div>
@@ -87,7 +87,7 @@
             </div>
 
             <div class="verticalSection">
-                <button id="btnSaveAll" is="emby-button" type="button" class="raised button-submit block" data-action="save-all">
+                <button id="btnSaveAll" is="emby-button" type="button" class="raised button-submit block" onclick="WikipediaEpisodeOrderPage.saveConfiguration()">
                     <span>Save Configuration</span>
                 </button>
             </div>
