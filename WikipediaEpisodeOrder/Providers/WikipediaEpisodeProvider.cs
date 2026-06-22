@@ -35,7 +35,12 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Providers
             string html;
             try
             {
-                html = await client.GetStringAsync(source, cancellationToken).ConfigureAwait(false);
+                using var request = new HttpRequestMessage(HttpMethod.Get, source);
+                request.Headers.TryAddWithoutValidation("User-Agent", "Mozilla/5.0 (compatible; WikipediaEpisodeOrderPlugin/1.0; +https://github.com/neilmanfredit/wikiepisodeorder-jellyfin-plugin)");
+                request.Headers.TryAddWithoutValidation("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+                using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
+                response.EnsureSuccessStatusCode();
+                html = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             }
             catch (HttpRequestException ex)
             {
