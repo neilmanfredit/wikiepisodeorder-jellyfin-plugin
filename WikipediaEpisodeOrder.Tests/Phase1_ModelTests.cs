@@ -95,7 +95,7 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Tests
         public void SeriesMapping_DefaultValues_AreCorrect()
         {
             var mapping = new SeriesMapping();
-            Assert.Equal(Guid.Empty, mapping.SeriesId);
+            Assert.Equal(string.Empty, mapping.SeriesId);
             Assert.Equal(string.Empty, mapping.SeriesName);
             Assert.Equal(string.Empty, mapping.WikipediaUrl);
             Assert.False(mapping.AutoRefresh);
@@ -108,7 +108,7 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Tests
             var id = Guid.NewGuid();
             var mapping = new SeriesMapping
             {
-                SeriesId = id,
+                SeriesId = id.ToString(),
                 SeriesName = "Doctor Who",
                 WikipediaUrl = "https://en.wikipedia.org/wiki/List_of_Doctor_Who_episodes_(2005%E2%80%93present)",
                 AutoRefresh = true,
@@ -116,7 +116,7 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Tests
                 LastUpdatedUtc = DateTime.UtcNow
             };
 
-            Assert.Equal(id, mapping.SeriesId);
+            Assert.Equal(id.ToString(), mapping.SeriesId);
             Assert.Equal("Doctor Who", mapping.SeriesName);
             Assert.True(mapping.AutoRefresh);
             Assert.Equal(14, mapping.RefreshDays);
