@@ -77,6 +77,12 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Services
                     continue;
                 }
 
+                if (columns.TitleIndex < 0)
+                {
+                    _logger.LogDebug("Skipping table - no title column detected");
+                    continue;
+                }
+
                 var rows = table.SelectNodes(".//tr");
                 if (rows == null) continue;
 
@@ -86,8 +92,6 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Services
 
                 foreach (var row in rows)
                 {
-                    var cells = GetEffectiveCells(row, rowspanTracker);
-
                     // Skip header rows (th-only rows)
                     if (IsHeaderRow(row))
                     {
@@ -97,6 +101,10 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Services
 
                     if (!headerSkipped) continue; // skip rows before first header
 
+                    // Skip section-marker rows and expand-child description rows
+                    if (ShouldSkipRow(row)) continue;
+
+                    var cells = GetEffectiveCells(row, rowspanTracker);
                     var ep = ExtractEpisode(cells, columns, sectionLabel, isSectionSpecial, order);
                     if (ep != null)
                     {
@@ -226,11 +234,33 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Services
             return ths != null && ths.Count == cells.Count;
         }
 
+        private static bool ShouldSkipRow(HtmlNode row)
+        {
+            // expand-child rows contain episode descriptions, not episode data
+            if (row.GetAttributeValue("class", "").Contains("expand-child"))
+                return true;
+
+            // Section-marker rows: single cell with large colspan (e.g. <td colspan="13">Series One (1981)</td>)
+            var cells = row.ChildNodes
+                .Where(n => n.NodeType == HtmlNodeType.Element && (n.Name == "td" || n.Name == "th"))
+                .ToList();
+            if (cells.Count == 1 && cells[0].GetAttributeValue("colspan", 1) > 3)
+                return true;
+
+            return false;
+        }
+
         // Handle rowspan: returns the effective cell text list, advancing rowspan counters
         private static List<string> GetEffectiveCells(HtmlNode row, Dictionary<int, (int remaining, string value)> rowspanTracker)
         {
-            var tds = row.SelectNodes(".//td");
-            if (tds == null) return new List<string>();
+            // Include td elements and th elements that are row/rowgroup headers (scope != "col").
+            // Wikipedia's wikiepisodetable format uses <th scope="row"> for the first data cell
+            // (episode number or title), which must be included to keep column indices aligned.
+            var tds = row.ChildNodes
+                .Where(n => n.NodeType == HtmlNodeType.Element &&
+                            (n.Name == "td" || (n.Name == "th" && n.GetAttributeValue("scope", "") != "col")))
+                .ToList();
+            if (tds.Count == 0 && rowspanTracker.Count == 0) return new List<string>();
 
             var result = new List<string>();
             int sourceIdx = 0;

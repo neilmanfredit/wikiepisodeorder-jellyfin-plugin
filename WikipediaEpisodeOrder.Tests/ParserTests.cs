@@ -347,6 +347,165 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Tests
 
         // ─── Tests: production code ───────────────────────────────────────────────
 
+        // ─── Tests: wikiepisodetable format (real Wikipedia format) ──────────────────
+
+        // Real Wikipedia episode tables use <th scope="row"> for the first data cell
+        // (episode number) and class="wikiepisodetable". Section-marker rows and
+        // expand-child description rows must be skipped.
+
+        private static string WikiEpisodeTable(string sectionHeader, params (string epNum, string title, string airDate)[] eps)
+        {
+            var header = @"<tr>
+      <th scope=""col""><abbr title=""Number"">No.</abbr></th>
+      <th scope=""col"">Title</th>
+      <th scope=""col"">Original release date</th>
+    </tr>";
+
+            var markerLabel = sectionHeader.Replace(" ", "&#95;");
+            var sectionMarker = $@"<tr><td colspan=""5"" id=""{markerLabel}""><b>{sectionHeader}</b></td></tr>";
+
+            var rows = string.Concat(eps.Select((e, i) => $@"
+    <tr class=""vevent module-episode-list-row"">
+      <th scope=""row"" rowspan=""1"" id=""ep{i + 1}"">{e.epNum}</th>
+      <td class=""summary"">""{ e.title }""</td>
+      <td>{e.airDate}</td>
+    </tr>
+    <tr class=""expand-child""><td colspan=""5"">Description of {e.title}</td></tr>"));
+
+            return $@"
+<h2>{sectionHeader}</h2>
+<table class=""wikitable plainrowheaders wikiepisodetable"">
+  <tbody>
+    {header}
+    {sectionMarker}
+    {rows}
+  </tbody>
+</table>";
+        }
+
+        [Fact]
+        public void Parse_WikiEpisodeTableExtractsEpisodesFromThScopeRow()
+        {
+            var html = WrapPage(
+                "List of Only Fools and Horses episodes - Wikipedia",
+                WikiEpisodeTable("Series One (1981)",
+                    ("1", "Big Brother", "8 September 1981"),
+                    ("2", "Go West Young Man", "15 September 1981")));
+
+            var result = _parser.Parse(html, "https://en.wikipedia.org/test");
+
+            Assert.Equal(2, result.Episodes.Count);
+            Assert.Equal("Big Brother", result.Episodes[0].Title);
+            Assert.Equal(1, result.Episodes[0].EpisodeNumber);
+            Assert.Equal("Go West Young Man", result.Episodes[1].Title);
+            Assert.Equal(2, result.Episodes[1].EpisodeNumber);
+        }
+
+        [Fact]
+        public void Parse_WikiEpisodeTableSectionMarkersNotExtractedAsEpisodes()
+        {
+            var html = WrapPage(
+                "List of Only Fools and Horses episodes - Wikipedia",
+                WikiEpisodeTable("Series One (1981)",
+                    ("1", "Big Brother", "8 September 1981")));
+
+            var result = _parser.Parse(html, "https://en.wikipedia.org/test");
+
+            Assert.Single(result.Episodes);
+            Assert.Equal("Big Brother", result.Episodes[0].Title);
+        }
+
+        [Fact]
+        public void Parse_WikiEpisodeTableExpandChildRowsNotExtractedAsEpisodes()
+        {
+            var html = WrapPage(
+                "List of Only Fools and Horses episodes - Wikipedia",
+                WikiEpisodeTable("Series One (1981)",
+                    ("1", "Big Brother", "8 September 1981")));
+
+            var result = _parser.Parse(html, "https://en.wikipedia.org/test");
+
+            // Should be exactly 1 episode, not 2 (the expand-child description row must be skipped)
+            Assert.Single(result.Episodes);
+        }
+
+        [Fact]
+        public void Parse_WikiEpisodeTableTitleInThScopeRow()
+        {
+            // Some OFAH tables omit the No. column and put the title directly in <th scope="row">
+            var html = WrapPage(
+                "List of Only Fools and Horses episodes - Wikipedia",
+                @"<h2>Specials</h2>
+<table class=""wikitable plainrowheaders wikiepisodetable"">
+  <tbody>
+    <tr>
+      <th scope=""col"">Title</th>
+      <th scope=""col"">Original release date</th>
+    </tr>
+    <tr class=""vevent module-episode-list-row"">
+      <th class=""summary"" scope=""row"" rowspan=""1"">&quot;Christmas Trees&quot;</th>
+      <td>27 December 1982</td>
+    </tr>
+    <tr class=""expand-child""><td colspan=""3"">Description</td></tr>
+  </tbody>
+</table>");
+
+            var result = _parser.Parse(html, "https://en.wikipedia.org/test");
+
+            Assert.Single(result.Episodes);
+            Assert.Equal("Christmas Trees", result.Episodes[0].Title);
+            Assert.Equal(new DateTime(1982, 12, 27), result.Episodes[0].AirDate!.Value);
+        }
+
+        [Fact]
+        public void Parse_SeriesOverviewTableIsSkipped()
+        {
+            // Series overview tables have no "Title" column — they should be ignored entirely
+            var html = WrapPage(
+                "List of Only Fools and Horses episodes - Wikipedia",
+                @"<table class=""wikitable"">
+  <tbody>
+    <tr>
+      <th scope=""col"">Series</th>
+      <th scope=""col"">Episodes</th>
+      <th scope=""col"">Originally released</th>
+    </tr>
+    <tr>
+      <th scope=""rowgroup"" rowspan=""2"">1</th>
+      <td colspan=""2"">6</td>
+      <td>8 September 1981</td>
+    </tr>
+  </tbody>
+</table>" +
+                WikiEpisodeTable("Series One",
+                    ("1", "Big Brother", "8 September 1981")));
+
+            var result = _parser.Parse(html, "https://en.wikipedia.org/test");
+
+            Assert.Single(result.Episodes);
+            Assert.Equal("Big Brother", result.Episodes[0].Title);
+        }
+
+        [Fact]
+        public void Parse_MultipleSeasonsWithWikiEpisodeTableFormat()
+        {
+            var html = WrapPage(
+                "List of Only Fools and Horses episodes - Wikipedia",
+                WikiEpisodeTable("Series One",
+                    ("1", "Big Brother", "8 September 1981"),
+                    ("2", "Go West Young Man", "15 September 1981")) +
+                WikiEpisodeTable("Series Two",
+                    ("7", "The Long Legs of the Law", "21 October 1981"),
+                    ("8", "Ashes to Ashes", "28 October 1981")));
+
+            var result = _parser.Parse(html, "https://en.wikipedia.org/test");
+
+            Assert.Equal(4, result.Episodes.Count);
+            Assert.Equal(1, result.Episodes[0].Order);
+            Assert.Equal(4, result.Episodes[3].Order);
+            Assert.Equal("Ashes to Ashes", result.Episodes[3].Title);
+        }
+
         [Fact]
         public void Parse_ProductionCodeExtractedWhenPresent()
         {
