@@ -1,127 +1,117 @@
 /* Wikipedia Episode Order - Preview Page */
-(function () {
-    'use strict';
 
-    var apiBase = '/WikipediaOrder';
+function escapeHtml(str) {
+    return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
-    function qs(id) { return document.getElementById(id); }
+function formatDate(isoString) {
+    if (!isoString) return '—';
+    try {
+        return new Date(isoString).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch (e) { return isoString; }
+}
 
-    function escapeHtml(str) {
-        return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+export default class WikipediaEpisodeOrderPreviewPage {
+    constructor(view, params) {
+        this._view = view;
+        this._apiBase = '/WikipediaOrder';
+        this._seriesId = params.seriesId || '';
+        this._seriesName = params.seriesName || 'Series';
+
+        view.addEventListener('viewshow', () => {
+            this.init();
+        });
     }
 
-    function getQueryParam(name) {
-        var params = new URLSearchParams(window.location.search);
-        return params.get(name);
-    }
+    qs(id) { return this._view.querySelector('#' + id); }
 
-    function formatDate(isoString) {
-        if (!isoString) return '—';
-        try {
-            var d = new Date(isoString);
-            return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-        } catch (e) { return isoString; }
-    }
-
-    function rowClass(entry) {
-        if (!entry.matched)                  return 'weo-row-unmatched';
-        if (entry.confidence < 95)           return 'weo-row-partial';
+    rowClass(entry) {
+        if (!entry.matched) return 'weo-row-unmatched';
+        if (entry.confidence < 95) return 'weo-row-partial';
         return 'weo-row-matched';
     }
 
-    function statusBadge(entry) {
-        if (!entry.matched)         return '<span class="weo-badge weo-badge-unmatched">Unmatched</span>';
-        if (entry.confidence < 95)  return '<span class="weo-badge weo-badge-partial">Partial</span>';
+    statusBadge(entry) {
+        if (!entry.matched) return '<span class="weo-badge weo-badge-unmatched">Unmatched</span>';
+        if (entry.confidence < 95) return '<span class="weo-badge weo-badge-partial">Partial</span>';
         return '<span class="weo-badge weo-badge-matched">Matched</span>';
     }
 
-    function renderTable(entries) {
-        var tbody = qs('previewTableBody');
+    renderTable(entries) {
+        var tbody = this.qs('previewTableBody');
         if (!tbody) return;
 
-        tbody.innerHTML = entries.map(function (e) {
+        tbody.innerHTML = entries.map((e) => {
             var specialBadge = e.isSpecial ? '<span class="weo-badge weo-badge-special">Special</span>' : '';
             var confidence = e.matched ? Math.round(e.confidence) + '%' : '—';
             var jellyfinTitle = e.matched ? escapeHtml(e.jellyfinTitle || '') : '<em style="opacity:0.5">not found</em>';
-            return '<tr class="' + rowClass(e) + '">' +
+            return '<tr class="' + this.rowClass(e) + '">' +
                 '<td>' + e.position + '</td>' +
                 '<td>' + escapeHtml(e.wikiTitle) + specialBadge + '</td>' +
                 '<td>' + jellyfinTitle + '</td>' +
-                '<td>' + statusBadge(e) + '</td>' +
+                '<td>' + this.statusBadge(e) + '</td>' +
                 '<td>' + confidence + '</td>' +
                 '<td>' + escapeHtml(e.matchMethod || '') + '</td>' +
                 '</tr>';
         }).join('');
     }
 
-    function showError(msg) {
-        var err = qs('errorMsg');
-        var errText = qs('errorText');
-        if (err)     err.style.display = 'block';
+    showError(msg) {
+        var err = this.qs('errorMsg');
+        var errText = this.qs('errorText');
+        if (err) err.style.display = 'block';
         if (errText) errText.textContent = msg;
-        var load = qs('loadingMsg');
+        var load = this.qs('loadingMsg');
         if (load) load.style.display = 'none';
     }
 
-    function loadPreview(seriesId) {
-        var url = ApiClient.getUrl(apiBase + '/' + seriesId + '/preview');
+    loadPreview() {
+        var url = ApiClient.getUrl(this._apiBase + '/' + this._seriesId + '/preview');
         ApiClient.ajax({ type: 'GET', url: url, dataType: 'json' })
-            .then(function (data) {
-                qs('loadingMsg').style.display = 'none';
-                qs('previewContent').style.display = 'block';
-
-                qs('statMatched').textContent  = data.matchedCount;
-                qs('statUnmatched').textContent = data.unmatchedCount;
-                qs('statTotal').textContent    = (data.entries || []).length;
-                qs('statRefresh').textContent  = formatDate(data.lastRefreshUtc);
-
-                renderTable(data.entries || []);
+            .then((data) => {
+                this.qs('loadingMsg').style.display = 'none';
+                this.qs('previewContent').style.display = 'block';
+                this.qs('statMatched').textContent = data.matchedCount;
+                this.qs('statUnmatched').textContent = data.unmatchedCount;
+                this.qs('statTotal').textContent = (data.entries || []).length;
+                this.qs('statRefresh').textContent = formatDate(data.lastRefreshUtc);
+                this.renderTable(data.entries || []);
             })
-            .catch(function (err) {
-                showError('Could not load preview. Status ' + (err.status || 'unknown') +
+            .catch((err) => {
+                this.showError('Could not load preview. Status ' + (err.status || 'unknown') +
                     '. Try refreshing the series from Wikipedia first.');
             });
     }
 
-    function refreshNow(seriesId) {
+    refreshNow() {
         Dashboard.showLoadingMsg();
-        ApiClient.ajax({ type: 'POST', url: ApiClient.getUrl(apiBase + '/' + seriesId + '/refresh') })
-            .then(function () {
+        ApiClient.ajax({ type: 'POST', url: ApiClient.getUrl(this._apiBase + '/' + this._seriesId + '/refresh') })
+            .then(() => {
                 Dashboard.hideLoadingMsg();
-                loadPreview(seriesId);
+                this.loadPreview();
             })
-            .catch(function (err) {
+            .catch((err) => {
                 Dashboard.hideLoadingMsg();
                 Dashboard.alert('Refresh failed: ' + (err.statusText || err));
             });
     }
 
-    function init() {
-        var seriesId   = getQueryParam('seriesId');
-        var seriesName = getQueryParam('seriesName') || 'Series';
+    init() {
+        var titleEl = this.qs('pageTitle');
+        if (titleEl) titleEl.textContent = 'Episode Order Preview — ' + this._seriesName;
 
-        var titleEl = qs('pageTitle');
-        if (titleEl) titleEl.textContent = 'Episode Order Preview — ' + decodeURIComponent(seriesName);
-
-        var btnRefresh = qs('btnRefreshNow');
+        var btnRefresh = this.qs('btnRefreshNow');
         if (btnRefresh) {
-            btnRefresh.addEventListener('click', function () {
-                if (seriesId) refreshNow(seriesId);
+            btnRefresh.addEventListener('click', () => {
+                if (this._seriesId) this.refreshNow();
             });
         }
 
-        if (!seriesId) {
-            showError('No series ID specified. Return to the configuration page and click Preview.');
+        if (!this._seriesId) {
+            this.showError('No series ID specified. Return to the configuration page and click Preview.');
             return;
         }
 
-        loadPreview(seriesId);
+        this.loadPreview();
     }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
-
-})();
+}
