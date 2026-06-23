@@ -10,6 +10,7 @@ export default class WikipediaEpisodeOrderConfigPage {
         this._mappings = [];
         this._editingIndex = -1;
         this._apiBase = '/WikipediaOrder';
+        this._searchTimeout = null;
 
         window.WikipediaEpisodeOrderPage = {
             showForm: (index) => this.showForm(index),
@@ -24,7 +25,60 @@ export default class WikipediaEpisodeOrderConfigPage {
 
         view.addEventListener('viewshow', () => {
             this.loadConfiguration();
+            this.initSearchBox();
         });
+    }
+
+    initSearchBox() {
+        var searchInput = this.qs('#seriesSearch');
+        var resultsDiv = this.qs('#seriesSearchResults');
+        if (!searchInput || !resultsDiv) return;
+
+        searchInput.addEventListener('input', () => {
+            clearTimeout(this._searchTimeout);
+            var q = searchInput.value.trim();
+            if (q.length < 2) { resultsDiv.style.display = 'none'; return; }
+            this._searchTimeout = setTimeout(() => this.runSeriesSearch(q), 300);
+        });
+
+        searchInput.addEventListener('blur', () => {
+            setTimeout(() => { resultsDiv.style.display = 'none'; }, 200);
+        });
+    }
+
+    runSeriesSearch(q) {
+        var resultsDiv = this.qs('#seriesSearchResults');
+        if (!resultsDiv) return;
+        fetch(ApiClient.getUrl(this._apiBase + '/series/search?q=' + encodeURIComponent(q)))
+            .then((r) => r.json())
+            .then((data) => {
+                if (!data || data.length === 0) {
+                    resultsDiv.innerHTML = '<div style="padding:0.5em;color:#888;">No results</div>';
+                } else {
+                    resultsDiv.innerHTML = data.map((item) =>
+                        '<div style="padding:0.6em 1em;cursor:pointer;" ' +
+                        'data-id="' + escapeHtml(item.id) + '" ' +
+                        'data-name="' + escapeHtml(item.name) + '" ' +
+                        'onmousedown="WikipediaEpisodeOrderPage.selectSeries(\'' + escapeHtml(item.id) + '\',\'' + escapeHtml(item.name.replace(/'/g, "\\'")) + '\')">' +
+                        escapeHtml(item.name) + '</div>'
+                    ).join('');
+                }
+                resultsDiv.style.display = 'block';
+            })
+            .catch(() => { resultsDiv.style.display = 'none'; });
+
+        window.WikipediaEpisodeOrderPage.selectSeries = (id, name) => this.selectSeries(id, name);
+    }
+
+    selectSeries(id, name) {
+        var hiddenId = this.qs('#seriesId');
+        var searchInput = this.qs('#seriesSearch');
+        var nameInput = this.qs('#seriesName');
+        var resultsDiv = this.qs('#seriesSearchResults');
+        if (hiddenId) hiddenId.value = id;
+        if (searchInput) searchInput.value = name;
+        if (nameInput && !nameInput.value) nameInput.value = name;
+        if (resultsDiv) resultsDiv.style.display = 'none';
     }
 
     qs(selector) {
@@ -67,6 +121,7 @@ export default class WikipediaEpisodeOrderConfigPage {
             var m = this._mappings[this._editingIndex];
             this.qs('#mappingFormTitle').textContent = 'Edit Mapping';
             this.qs('#seriesId').value = m.seriesId || '';
+            this.qs('#seriesSearch').value = m.seriesName || '';
             this.qs('#seriesName').value = m.seriesName || '';
             this.qs('#wikiUrl').value = m.wikipediaUrl || '';
             this.qs('#autoRefresh').checked = !!m.autoRefresh;
@@ -74,6 +129,7 @@ export default class WikipediaEpisodeOrderConfigPage {
         } else {
             this.qs('#mappingFormTitle').textContent = 'Add Mapping';
             this.qs('#seriesId').value = '';
+            this.qs('#seriesSearch').value = '';
             this.qs('#seriesName').value = '';
             this.qs('#wikiUrl').value = '';
             this.qs('#autoRefresh').checked = false;
@@ -86,6 +142,8 @@ export default class WikipediaEpisodeOrderConfigPage {
     hideForm() {
         var form = this.qs('#mappingForm');
         if (form) form.style.display = 'none';
+        var resultsDiv = this.qs('#seriesSearchResults');
+        if (resultsDiv) resultsDiv.style.display = 'none';
         this._editingIndex = -1;
     }
 
@@ -97,7 +155,7 @@ export default class WikipediaEpisodeOrderConfigPage {
         var refreshDays = parseInt(this.qs('#refreshDays').value, 10) || 7;
 
         if (!seriesId || !seriesName || !wikiUrl) {
-            alert('Series ID, Series Name, and Wikipedia URL are all required.');
+            alert('Please select a series from the search results, enter a Series Name, and provide a Wikipedia URL.');
             return;
         }
 
