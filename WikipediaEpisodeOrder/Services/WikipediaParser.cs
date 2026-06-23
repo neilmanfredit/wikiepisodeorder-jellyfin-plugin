@@ -18,7 +18,8 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Services
             "film", "films", "movie", "movies", "reunion", "event", "events",
             "miniseries", "mini-series", "one-off", "one off", "pilot",
             "webisode", "web special", "bonus episode", "bonus episodes",
-            "oav", "ova", "feature", "feature length"
+            "oav", "ova", "feature", "feature length",
+            "documentary", "documentaries"
         };
 
         // Date formats encountered on Wikipedia episode lists
@@ -326,6 +327,15 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Services
             int? season = null;
             if (columns.SeasonIndex >= 0 && columns.SeasonIndex < cells.Count)
                 season = ParseInt(cells[columns.SeasonIndex]);
+
+            // When there is no in-table season column, try to extract season number
+            // from the section label (e.g. "Series 1 (1981)" or "Season 3").
+            if (season == null && !string.IsNullOrWhiteSpace(sectionLabel))
+            {
+                var seasonMatch = Regex.Match(sectionLabel, @"\b(?:series|season)\s*(\d+)\b", RegexOptions.IgnoreCase);
+                if (seasonMatch.Success)
+                    season = int.Parse(seasonMatch.Groups[1].Value);
+            }
 
             int? epNum = null;
             if (columns.EpNumIndex >= 0 && columns.EpNumIndex < cells.Count)
