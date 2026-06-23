@@ -49,8 +49,7 @@ export default class WikipediaEpisodeOrderConfigPage {
     runSeriesSearch(q) {
         var resultsDiv = this.qs('#seriesSearchResults');
         if (!resultsDiv) return;
-        fetch(ApiClient.getUrl(this._apiBase + '/series/search?q=' + encodeURIComponent(q)))
-            .then((r) => r.json())
+        ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl(this._apiBase + '/series/search?q=' + encodeURIComponent(q)) })
             .then((data) => {
                 if (!data || data.length === 0) {
                     resultsDiv.innerHTML = '<div style="padding:0.5em;color:#888;">No results</div>';
