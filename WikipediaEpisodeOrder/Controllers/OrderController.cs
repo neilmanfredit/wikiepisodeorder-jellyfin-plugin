@@ -4,7 +4,11 @@ using System.Linq;
 using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.WikipediaEpisodeOrder.Services;
+using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Library;
+using MediaBrowser.Model.Querying;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -19,15 +23,18 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Controllers
     {
         private readonly PlaybackOrderService _playbackOrderService;
         private readonly RefreshService _refreshService;
+        private readonly ILibraryManager _libraryManager;
         private readonly ILogger<OrderController> _logger;
 
         public OrderController(
             PlaybackOrderService playbackOrderService,
             RefreshService refreshService,
+            ILibraryManager libraryManager,
             ILogger<OrderController> logger)
         {
             _playbackOrderService = playbackOrderService;
             _refreshService = refreshService;
+            _libraryManager = libraryManager;
             _logger = logger;
         }
 
@@ -171,6 +178,31 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Controllers
                 ItemIds = queue.ToList()
             });
         }
+
+        /// <summary>
+        /// Searches the Jellyfin library for TV series matching the query string.
+        /// </summary>
+        [HttpGet("series/search")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public ActionResult<IEnumerable<SeriesSearchResult>> SearchSeries([FromQuery] string q)
+        {
+            if (string.IsNullOrWhiteSpace(q))
+                return Ok(Array.Empty<SeriesSearchResult>());
+
+            var query = new InternalItemsQuery
+            {
+                IncludeItemTypes = new[] { BaseItemKind.Series },
+                SearchTerm = q,
+                Limit = 20
+            };
+
+            var results = _libraryManager.GetItemList(query);
+            return Ok(results.Select(item => new SeriesSearchResult
+            {
+                Id = item.Id,
+                Name = item.Name ?? string.Empty
+            }));
+        }
     }
 
     // ─── Response DTOs ────────────────────────────────────────────────────────────
@@ -211,5 +243,11 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Controllers
     {
         public Guid SeriesId { get; set; }
         public List<Guid> ItemIds { get; set; } = new();
+    }
+
+    public class SeriesSearchResult
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
     }
 }

@@ -42,11 +42,13 @@
             <div id="mappingForm" class="verticalSection" style="display:none;">
                 <h3 id="mappingFormTitle" class="sectionTitle">Add Mapping</h3>
 
-                <div class="inputContainer">
-                    <label class="inputLabel inputLabelUnfocused" for="seriesId">Jellyfin Series ID</label>
-                    <input id="seriesId" type="text" is="emby-input" placeholder="Paste Series GUID here" />
-                    <div class="fieldDescription">Found in the series URL or library info page.</div>
+                <div class="inputContainer" style="position:relative;">
+                    <label class="inputLabel inputLabelUnfocused" for="seriesSearch">Search Jellyfin Series</label>
+                    <input id="seriesSearch" type="text" is="emby-input" placeholder="Type to search your library..." autocomplete="off" />
+                    <div id="seriesSearchResults" style="display:none;border:1px solid #555;background:#1c1c1c;max-height:200px;overflow-y:auto;position:absolute;z-index:200;width:100%;left:0;top:100%;"></div>
+                    <div class="fieldDescription">Search your Jellyfin library for the TV series, then click a result to select it.</div>
                 </div>
+                <input id="seriesId" type="hidden" value="" />
 
                 <div class="inputContainer">
                     <label class="inputLabel inputLabelUnfocused" for="seriesName">Series Name</label>
