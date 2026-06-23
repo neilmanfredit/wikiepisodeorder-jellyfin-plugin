@@ -46,8 +46,7 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Services
             {
                 ParentId = seriesId,
                 Recursive = true,
-                IncludeItemTypes = new[] { BaseItemKind.Episode },
-                OrderBy = Array.Empty<(ItemSortBy, SortOrder)>()
+                IncludeItemTypes = new[] { BaseItemKind.Episode }
             };
 
             var items = _libraryManager.GetItemList(query);
