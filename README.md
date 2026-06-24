@@ -10,11 +10,13 @@ A [Jellyfin](https://jellyfin.org) plugin that fetches Wikipedia episode list pa
 
 ## Installing via Jellyfin Plugin Repository (Recommended)
 
-1. In Jellyfin, go to **Dashboard → Plugins → Repositories**
-2. Click **Add** and enter this URL: https://neilmanfredit.github.io/wikiepisodeorder-jellyfin-plugin/manifest.json
-3. Click **Save**, then go to **Dashboard → Plugins → Catalogue**
-4. Find **Wikipedia Episode Order** and click **Install**
-5. Restart Jellyfin when prompted
+1. In Jellyfin, go to **Dashboard → Plugins → Catalogue**
+2. Click **Manage Repositories**
+3. Click the **+** button to add a new repository
+4. Enter a name (e.g. `Wikipedia Episode Order`) and this URL: https://neilmanfredit.github.io/wikiepisodeorder-jellyfin-plugin/manifest.json
+5. Click **Save**
+6. Return to **Dashboard → Plugins → Catalogue** and search for **Wikipedia Episode Order**
+7. Click **Install** and restart Jellyfin when prompted
 
 ---
 
