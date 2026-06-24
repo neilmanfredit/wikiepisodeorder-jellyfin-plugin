@@ -57,10 +57,10 @@ export default class WikipediaEpisodeOrderConfigPage {
                 } else {
                     resultsDiv.innerHTML = data.map((item) =>
                         '<div style="padding:0.6em 1em;cursor:pointer;" ' +
-                        'data-id="' + escapeHtml(item.id) + '" ' +
-                        'data-name="' + escapeHtml(item.name) + '" ' +
-                        'onmousedown="WikipediaEpisodeOrderPage.selectSeries(\'' + escapeHtml(item.id) + '\',\'' + escapeHtml(item.name.replace(/'/g, "\\'")) + '\')">' +
-                        escapeHtml(item.name) + '</div>'
+                        'data-id="' + escapeHtml(item.Id) + '" ' +
+                        'data-name="' + escapeHtml(item.Name) + '" ' +
+                        'onmousedown="WikipediaEpisodeOrderPage.selectSeries(\'' + escapeHtml(item.Id) + '\',\'' + escapeHtml(item.Name.replace(/'/g, "\\'")) + '\')">' +
+                        escapeHtml(item.Name) + '</div>'
                     ).join('');
                 }
                 resultsDiv.style.display = 'block';
