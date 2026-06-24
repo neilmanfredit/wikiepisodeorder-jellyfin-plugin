@@ -3,12 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.WikipediaEpisodeOrder.Models;
-using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Model.Querying;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Services
@@ -42,15 +39,18 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Services
         {
             _logger.LogDebug("Querying Jellyfin library for series {SeriesId}", seriesId);
 
-            var query = new InternalItemsQuery
+            // Jellyfin 10.11.x stores foreign-key GUIDs as uppercase strings in SQLite.
+            // GetItemById uses the primary-key column (BLOB, case-insensitive), so it resolves
+            // the item regardless of GUID case. GetRecursiveChildren then traverses in-memory,
+            // bypassing the case-sensitive string comparison that caused zero results.
+            var seriesFolder = _libraryManager.GetItemById(seriesId) as MediaBrowser.Controller.Entities.Folder;
+            if (seriesFolder == null)
             {
-                ParentId = seriesId,
-                Recursive = true,
-                IncludeItemTypes = new[] { BaseItemKind.Episode },
-                OrderBy = Array.Empty<(ItemSortBy, SortOrder)>()
-            };
+                _logger.LogWarning("Series {SeriesId} not found in Jellyfin library", seriesId);
+                return Array.Empty<EpisodeMatcher.JellyfinCandidate>();
+            }
 
-            var items = _libraryManager.GetItemList(query);
+            var items = seriesFolder.GetRecursiveChildren(i => i is Episode);
 
             var candidates = items
                 .OfType<Episode>()

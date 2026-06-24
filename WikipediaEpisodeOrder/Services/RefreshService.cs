@@ -81,7 +81,7 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Services
                 return;
             }
 
-            await _cache.WriteAsync(mapping.SeriesId, order, cancellationToken).ConfigureAwait(false);
+            await _cache.WriteAsync(Guid.Parse(mapping.SeriesId), order, cancellationToken).ConfigureAwait(false);
             mapping.LastUpdatedUtc = order.LastUpdatedUtc;
 
             _logger.LogInformation(
@@ -102,14 +102,14 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Services
 
                 bool needsRefresh = false;
 
-                if (!_cache.Exists(mapping.SeriesId))
+                if (!_cache.Exists(Guid.Parse(mapping.SeriesId)))
                 {
                     _logger.LogDebug("No cache for '{SeriesName}', will refresh", mapping.SeriesName);
                     needsRefresh = true;
                 }
                 else if (mapping.AutoRefresh)
                 {
-                    var cached = await _cache.ReadAsync(mapping.SeriesId, cancellationToken)
+                    var cached = await _cache.ReadAsync(Guid.Parse(mapping.SeriesId), cancellationToken)
                         .ConfigureAwait(false);
                     if (cached != null && _cache.IsExpired(cached, mapping.RefreshDays))
                     {

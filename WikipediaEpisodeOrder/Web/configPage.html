@@ -8,7 +8,8 @@
 <div id="WikipediaEpisodeOrderConfigPage"
      data-role="page"
      class="page type-interior plugin-config-page"
-     data-require="emby-input,emby-button,emby-select,emby-checkbox">
+     data-require="emby-input,emby-button,emby-select,emby-checkbox"
+     data-controller="WikipediaEpisodeOrderJS">
 
     <div data-role="content">
         <div class="content-primary">
@@ -32,7 +33,7 @@
                 <div id="mappingList" class="paperList"></div>
 
                 <br>
-                <button id="btnAddMapping" is="emby-button" type="button" class="raised block">
+                <button id="btnAddMapping" is="emby-button" type="button" class="raised block" onclick="WikipediaEpisodeOrderPage.showForm()">
                     <span>Add Series Mapping</span>
                 </button>
             </div>
@@ -41,11 +42,13 @@
             <div id="mappingForm" class="verticalSection" style="display:none;">
                 <h3 id="mappingFormTitle" class="sectionTitle">Add Mapping</h3>
 
-                <div class="inputContainer">
-                    <label class="inputLabel inputLabelUnfocused" for="seriesId">Jellyfin Series ID</label>
-                    <input id="seriesId" type="text" is="emby-input" placeholder="Paste Series GUID here" />
-                    <div class="fieldDescription">Found in the series URL or library info page.</div>
+                <div class="inputContainer" style="position:relative;">
+                    <label class="inputLabel inputLabelUnfocused" for="seriesSearch">Search Jellyfin Series</label>
+                    <input id="seriesSearch" type="text" is="emby-input" placeholder="Type to search your library..." autocomplete="off" />
+                    <div id="seriesSearchResults" style="display:none;border:1px solid #555;background:#1c1c1c;max-height:200px;overflow-y:auto;position:absolute;z-index:200;width:100%;left:0;top:100%;"></div>
+                    <div class="fieldDescription">Search your Jellyfin library for the TV series, then click a result to select it.</div>
                 </div>
+                <input id="seriesId" type="hidden" value="" />
 
                 <div class="inputContainer">
                     <label class="inputLabel inputLabelUnfocused" for="seriesName">Series Name</label>
@@ -75,10 +78,10 @@
                 </div>
 
                 <div class="formButtons" style="margin-top:1em;">
-                    <button id="btnSaveMapping" is="emby-button" type="button" class="raised button-submit">
+                    <button id="btnSaveMapping" is="emby-button" type="button" class="raised button-submit" onclick="WikipediaEpisodeOrderPage.saveMapping()">
                         <span>Save</span>
                     </button>
-                    <button id="btnCancelMapping" is="emby-button" type="button" class="raised">
+                    <button id="btnCancelMapping" is="emby-button" type="button" class="raised" onclick="WikipediaEpisodeOrderPage.hideForm()">
                         <span>Cancel</span>
                     </button>
                 </div>
@@ -87,7 +90,7 @@
             </div>
 
             <div class="verticalSection">
-                <button id="btnSaveAll" is="emby-button" type="button" class="raised button-submit block">
+                <button id="btnSaveAll" is="emby-button" type="button" class="raised button-submit block" onclick="WikipediaEpisodeOrderPage.saveConfiguration()">
                     <span>Save Configuration</span>
                 </button>
             </div>
@@ -95,6 +98,5 @@
         </div>
     </div>
 </div>
-<script src="configPage.js"></script>
 </body>
 </html>

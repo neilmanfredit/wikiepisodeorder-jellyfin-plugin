@@ -4,7 +4,7 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Models
 {
     public class SeriesMapping
     {
-        public Guid SeriesId { get; set; }
+        public string SeriesId { get; set; } = string.Empty;
 
         public string SeriesName { get; set; } = string.Empty;
 
@@ -14,6 +14,6 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Models
 
         public int RefreshDays { get; set; } = 7;
 
-        public DateTime LastUpdatedUtc { get; set; }
+        public DateTime? LastUpdatedUtc { get; set; }
     }
 }

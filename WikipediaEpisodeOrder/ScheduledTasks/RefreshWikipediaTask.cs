@@ -81,8 +81,8 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.ScheduledTasks
         {
             yield return new TaskTriggerInfo
             {
-                Type = TaskTriggerInfo.TriggerDaily,
-                TimeOfDayTicks = TimeSpan.FromHours(3).Ticks // 03:00 each day
+                Type = TaskTriggerInfoType.DailyTrigger,
+                TimeOfDayTicks = TimeSpan.FromHours(3).Ticks
             };
         }
     }

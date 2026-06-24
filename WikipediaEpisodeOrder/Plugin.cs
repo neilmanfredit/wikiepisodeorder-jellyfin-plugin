@@ -37,7 +37,8 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder
                 new PluginPageInfo
                 {
                     Name = "WikipediaEpisodeOrderJS",
-                    EmbeddedResourcePath = $"{ns}.Web.configPage.js"
+                    EmbeddedResourcePath = $"{ns}.Web.configPage.js",
+                    EnableInMainMenu = false
                 },
                 new PluginPageInfo
                 {
@@ -47,7 +48,8 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder
                 new PluginPageInfo
                 {
                     Name = "WikipediaEpisodeOrderPreviewJS",
-                    EmbeddedResourcePath = $"{ns}.Web.orderPreview.js"
+                    EmbeddedResourcePath = $"{ns}.Web.orderPreview.js",
+                    EnableInMainMenu = false
                 }
             };
         }

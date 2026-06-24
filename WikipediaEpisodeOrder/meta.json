@@ -1,0 +1,20 @@
+{
+  "category": "Metadata",
+  "changelog": "",
+  "description": "Allows users to use Wikipedia episode lists to define TV show playback ordering.",
+  "guid": "a8cba4a4-65b8-4a7e-9f0e-b3e56b6e3b7b",
+  "name": "Wikipedia Episode Order",
+  "overview": "Wikipedia-driven episode ordering for Jellyfin.",
+  "owner": "Neil Manfred",
+  "targetAbi": "10.11.10.0",
+  "timestamp": "2026-06-24T00:00:00.0000000Z",
+  "version": "1.0.24.0",
+  "status": "Active",
+  "autoUpdate": false,
+  "assemblies": [
+    "Jellyfin.Plugin.WikipediaEpisodeOrder.dll",
+    "HtmlAgilityPack.dll",
+    "AngleSharp.dll",
+    "FuzzySharp.dll"
+  ]
+}

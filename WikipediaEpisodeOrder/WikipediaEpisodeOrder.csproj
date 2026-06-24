@@ -3,10 +3,10 @@
   <PropertyGroup>
     <AssemblyName>Jellyfin.Plugin.WikipediaEpisodeOrder</AssemblyName>
     <RootNamespace>Jellyfin.Plugin.WikipediaEpisodeOrder</RootNamespace>
-    <TargetFramework>net8.0</TargetFramework>
-    <Version>1.0.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
+    <TargetFramework>net9.0</TargetFramework>
+    <Version>1.0.24.0</Version>
+    <AssemblyVersion>1.0.24.0</AssemblyVersion>
+    <FileVersion>1.0.24.0</FileVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -21,14 +21,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Jellyfin.Model" Version="10.10.7" />
-    <PackageReference Include="Jellyfin.Common" Version="10.10.7" />
-    <PackageReference Include="Jellyfin.Controller" Version="10.10.7" />
+    <PackageReference Include="Jellyfin.Model" Version="10.11.10"><ExcludeAssets>runtime</ExcludeAssets></PackageReference>
+    <PackageReference Include="Jellyfin.Common" Version="10.11.10"><ExcludeAssets>runtime</ExcludeAssets></PackageReference>
+    <PackageReference Include="Jellyfin.Controller" Version="10.11.10"><ExcludeAssets>runtime</ExcludeAssets></PackageReference>
+    <PackageReference Include="Jellyfin.Data" Version="10.11.10"><ExcludeAssets>runtime</ExcludeAssets></PackageReference>
+    <PackageReference Include="Jellyfin.Extensions" Version="10.11.10"><ExcludeAssets>runtime</ExcludeAssets></PackageReference>
     <PackageReference Include="HtmlAgilityPack" Version="1.11.72" />
     <PackageReference Include="AngleSharp" Version="1.1.2" />
     <PackageReference Include="FuzzySharp" Version="2.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.11" />
   </ItemGroup>
 
   <ItemGroup>
@@ -40,6 +42,13 @@
     <EmbeddedResource Include="Web\configPage.js" />
     <EmbeddedResource Include="Web\orderPreview.html" />
     <EmbeddedResource Include="Web\orderPreview.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="meta.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>
