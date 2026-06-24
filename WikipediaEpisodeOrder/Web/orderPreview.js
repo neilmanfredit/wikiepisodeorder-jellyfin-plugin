@@ -1,118 +1,136 @@
 /* Wikipedia Episode Order - Preview Page */
+(function () {
+    'use strict';
 
-function escapeHtml(str) {
-    return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
+    var API_BASE = '/WikipediaOrder';
 
-function formatDate(isoString) {
-    if (!isoString) return '—';
-    try {
-        return new Date(isoString).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-    } catch (e) { return isoString; }
-}
-
-export default class WikipediaEpisodeOrderPreviewPage {
-    constructor(view, params) {
-        this._view = view;
-        this._apiBase = '/WikipediaOrder';
-        this._seriesId = params.seriesId || '';
-        this._seriesName = params.seriesName || 'Series';
-
-        view.addEventListener('viewshow', () => {
-            this.init();
-        });
+    function escapeHtml(str) {
+        return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    qs(id) { return this._view.querySelector('#' + id); }
+    function formatDate(isoString) {
+        if (!isoString) return '—';
+        try {
+            return new Date(isoString).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        } catch (e) { return isoString; }
+    }
 
-    rowClass(entry) {
+    function getParams() {
+        var hash = window.location.hash;
+        var qi = hash.indexOf('?');
+        var searchStr = qi >= 0 ? hash.slice(qi) : '';
+        try {
+            var p = new URLSearchParams(searchStr);
+            return {
+                seriesId: p.get('seriesId') || '',
+                seriesName: p.get('seriesName') || 'Series'
+            };
+        } catch (e) {
+            return { seriesId: '', seriesName: 'Series' };
+        }
+    }
+
+    function rowClass(entry) {
         if (!entry.matched) return 'weo-row-unmatched';
         if (entry.confidence < 95) return 'weo-row-partial';
         return 'weo-row-matched';
     }
 
-    statusBadge(entry) {
+    function statusBadge(entry) {
         if (!entry.matched) return '<span class="weo-badge weo-badge-unmatched">Unmatched</span>';
         if (entry.confidence < 95) return '<span class="weo-badge weo-badge-partial">Partial</span>';
         return '<span class="weo-badge weo-badge-matched">Matched</span>';
     }
 
-    renderTable(entries) {
-        var tbody = this.qs('previewTableBody');
+    function renderTable(entries) {
+        var tbody = document.getElementById('previewTableBody');
         if (!tbody) return;
 
-        tbody.innerHTML = entries.map((e) => {
+        tbody.innerHTML = entries.map(function (e) {
             var specialBadge = e.isSpecial ? '<span class="weo-badge weo-badge-special">Special</span>' : '';
             var confidence = e.matched ? Math.round(e.confidence) + '%' : '—';
             var jellyfinTitle = e.matched ? escapeHtml(e.jellyfinTitle || '') : '<em style="opacity:0.5">not found</em>';
-            return '<tr class="' + this.rowClass(e) + '">' +
+            return '<tr class="' + rowClass(e) + '">' +
                 '<td>' + e.position + '</td>' +
                 '<td>' + escapeHtml(e.wikiTitle) + specialBadge + '</td>' +
                 '<td>' + jellyfinTitle + '</td>' +
-                '<td>' + this.statusBadge(e) + '</td>' +
+                '<td>' + statusBadge(e) + '</td>' +
                 '<td>' + confidence + '</td>' +
                 '<td>' + escapeHtml(e.matchMethod || '') + '</td>' +
                 '</tr>';
         }).join('');
     }
 
-    showError(msg) {
-        var err = this.qs('errorMsg');
-        var errText = this.qs('errorText');
+    function showError(msg) {
+        var err = document.getElementById('errorMsg');
+        var errText = document.getElementById('errorText');
         if (err) err.style.display = 'block';
         if (errText) errText.textContent = msg;
-        var load = this.qs('loadingMsg');
+        var load = document.getElementById('loadingMsg');
         if (load) load.style.display = 'none';
     }
 
-    loadPreview() {
-        var url = ApiClient.getUrl(this._apiBase + '/' + this._seriesId + '/preview');
-        ApiClient.ajax({ type: 'GET', url: url })
-            .then((r) => r.json())
-            .then((data) => {
-                this.qs('loadingMsg').style.display = 'none';
-                this.qs('previewContent').style.display = 'block';
-                this.qs('statMatched').textContent = data.matchedCount;
-                this.qs('statUnmatched').textContent = data.unmatchedCount;
-                this.qs('statTotal').textContent = (data.entries || []).length;
-                this.qs('statRefresh').textContent = formatDate(data.lastRefreshUtc);
-                this.renderTable(data.entries || []);
-            })
-            .catch((err) => {
-                this.showError('Could not load preview. Status ' + (err.status || 'unknown') +
-                    '. Try refreshing the series from Wikipedia first.');
-            });
+    function loadPreview(seriesId) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', ApiClient.getUrl(API_BASE + '/' + seriesId + '/preview'));
+        xhr.setRequestHeader('X-Emby-Authorization', 'MediaBrowser Token="' + ApiClient.accessToken() + '", Client="Jellyfin Web", Device="Browser", DeviceId="plugin", Version="1.0.0"');
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                var data = JSON.parse(xhr.responseText);
+                document.getElementById('loadingMsg').style.display = 'none';
+                document.getElementById('previewContent').style.display = 'block';
+                document.getElementById('statMatched').textContent = data.matchedCount;
+                document.getElementById('statUnmatched').textContent = data.unmatchedCount;
+                document.getElementById('statTotal').textContent = (data.entries || []).length;
+                document.getElementById('statRefresh').textContent = formatDate(data.lastRefreshUtc);
+                renderTable(data.entries || []);
+            } else {
+                showError('Could not load preview. Status ' + xhr.status + '. Try refreshing the series from Wikipedia first.');
+            }
+        };
+        xhr.onerror = function () {
+            showError('Could not load preview. Network error. Try refreshing the series from Wikipedia first.');
+        };
+        xhr.send();
     }
 
-    refreshNow() {
+    function refreshNow(seriesId) {
         Dashboard.showLoadingMsg();
-        ApiClient.ajax({ type: 'POST', url: ApiClient.getUrl(this._apiBase + '/' + this._seriesId + '/refresh') })
-            .then(() => {
+        ApiClient.ajax({ type: 'POST', url: ApiClient.getUrl(API_BASE + '/' + seriesId + '/refresh') })
+            .then(function () {
                 Dashboard.hideLoadingMsg();
-                this.loadPreview();
+                loadPreview(seriesId);
             })
-            .catch((err) => {
+            .catch(function (err) {
                 Dashboard.hideLoadingMsg();
                 Dashboard.alert('Refresh failed: ' + (err.statusText || err));
             });
     }
 
-    init() {
-        var titleEl = this.qs('pageTitle');
-        if (titleEl) titleEl.textContent = 'Episode Order Preview — ' + this._seriesName;
+    var page = document.getElementById('WikipediaEpisodeOrderPreviewPage');
+    if (page) {
+        page.addEventListener('viewshow', function () {
+            var params = getParams();
+            var seriesId = params.seriesId;
+            var seriesName = params.seriesName;
 
-        var btnRefresh = this.qs('btnRefreshNow');
-        if (btnRefresh) {
-            btnRefresh.addEventListener('click', () => {
-                if (this._seriesId) this.refreshNow();
-            });
-        }
+            var titleEl = document.getElementById('pageTitle');
+            if (titleEl) titleEl.textContent = 'Episode Order Preview — ' + seriesName;
 
-        if (!this._seriesId) {
-            this.showError('No series ID specified. Return to the configuration page and click Preview.');
-            return;
-        }
+            var btnRefresh = document.getElementById('btnRefreshNow');
+            if (btnRefresh) {
+                btnRefresh.onclick = function () {
+                    if (seriesId) refreshNow(seriesId);
+                };
+            }
 
-        this.loadPreview();
+            if (!seriesId) {
+                showError('No series ID specified. Return to the configuration page and click Preview.');
+                return;
+            }
+
+            loadPreview(seriesId);
+        });
     }
-}
+
+})();
