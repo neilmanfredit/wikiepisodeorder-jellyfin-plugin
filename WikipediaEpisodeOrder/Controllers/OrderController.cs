@@ -8,6 +8,9 @@ using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.WikipediaEpisodeOrder.Services;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Controller.Net;
+using MediaBrowser.Controller.Playlists;
+using MediaBrowser.Model.Playlists;
 using MediaBrowser.Model.Querying;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -24,17 +27,23 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Controllers
         private readonly PlaybackOrderService _playbackOrderService;
         private readonly RefreshService _refreshService;
         private readonly ILibraryManager _libraryManager;
+        private readonly IPlaylistManager _playlistManager;
+        private readonly IAuthorizationContext _authorizationContext;
         private readonly ILogger<OrderController> _logger;
 
         public OrderController(
             PlaybackOrderService playbackOrderService,
             RefreshService refreshService,
             ILibraryManager libraryManager,
+            IPlaylistManager playlistManager,
+            IAuthorizationContext authorizationContext,
             ILogger<OrderController> logger)
         {
             _playbackOrderService = playbackOrderService;
             _refreshService = refreshService;
             _libraryManager = libraryManager;
+            _playlistManager = playlistManager;
+            _authorizationContext = authorizationContext;
             _logger = logger;
         }
 
@@ -180,6 +189,60 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Controllers
         }
 
         /// <summary>
+        /// Creates (or replaces) a Jellyfin playlist for a series in Wikipedia episode order.
+        /// </summary>
+        [HttpPost("{seriesId}/playlist")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<PlaylistResult>> CreatePlaylist(
+            [FromRoute] string seriesId,
+            CancellationToken cancellationToken)
+        {
+            var result = await _playbackOrderService.GetPlaybackOrderAsync(Guid.Parse(seriesId), cancellationToken)
+                .ConfigureAwait(false);
+
+            if (result.Entries.Count == 0)
+                return NotFound(new { message = $"No Wikipedia order found for series {seriesId}. Refresh first." });
+
+            var matchedIds = result.Entries
+                .Where(e => e.Matched && e.JellyfinItemId.HasValue)
+                .OrderBy(e => e.Position)
+                .Select(e => e.JellyfinItemId!.Value)
+                .ToList();
+
+            if (matchedIds.Count == 0)
+                return BadRequest(new { message = "No matched episodes to add to a playlist." });
+
+            var seriesItem = _libraryManager.GetItemById(Guid.Parse(seriesId));
+            var playlistName = $"{seriesItem?.Name ?? seriesId} — Wikipedia Order";
+
+            var authInfo = await _authorizationContext.GetAuthorizationInfo(Request).ConfigureAwait(false);
+            var userId = authInfo.UserId;
+
+            var existing = _playlistManager.GetPlaylists(userId)
+                .Where(p => string.Equals(p.Name, playlistName, StringComparison.Ordinal) && p.OwnerUserId == userId)
+                .ToList();
+            foreach (var pl in existing)
+                _libraryManager.DeleteItem(pl, new DeleteOptions { DeleteFileLocation = true });
+
+            var created = await _playlistManager.CreatePlaylist(new PlaylistCreationRequest
+            {
+                Name = playlistName,
+                ItemIdList = matchedIds,
+                UserId = userId
+            }).ConfigureAwait(false);
+
+            return Ok(new PlaylistResult
+            {
+                PlaylistId = created.Id,
+                Name = playlistName,
+                ItemCount = matchedIds.Count
+            });
+        }
+
+        /// <summary>
         /// Searches the Jellyfin library for TV series matching the query string.
         /// </summary>
         [HttpGet("series/search")]
@@ -249,5 +312,12 @@ namespace Jellyfin.Plugin.WikipediaEpisodeOrder.Controllers
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
+    }
+
+    public class PlaylistResult
+    {
+        public string PlaylistId { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public int ItemCount { get; set; }
     }
 }
