@@ -67,7 +67,8 @@ export default class WikipediaEpisodeOrderPreviewPage {
 
     loadPreview() {
         var url = ApiClient.getUrl(this._apiBase + '/' + this._seriesId + '/preview');
-        ApiClient.ajax({ type: 'GET', url: url, dataType: 'json' })
+        ApiClient.ajax({ type: 'GET', url: url })
+            .then((r) => r.json())
             .then((data) => {
                 this.qs('loadingMsg').style.display = 'none';
                 this.qs('previewContent').style.display = 'block';
