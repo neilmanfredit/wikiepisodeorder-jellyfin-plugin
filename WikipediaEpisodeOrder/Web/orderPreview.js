@@ -90,6 +90,27 @@ export default class WikipediaEpisodeOrderPreviewPage {
         xhr.send();
     }
 
+    createPlaylist() {
+        Dashboard.showLoadingMsg();
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', ApiClient.getUrl(this._apiBase + '/' + this._seriesId + '/playlist'));
+        xhr.setRequestHeader('X-Emby-Authorization', 'MediaBrowser Token="' + ApiClient.accessToken() + '", Client="Jellyfin Web", Device="Browser", DeviceId="plugin", Version="1.0.0"');
+        xhr.onload = () => {
+            Dashboard.hideLoadingMsg();
+            if (xhr.status === 200) {
+                var data = JSON.parse(xhr.responseText);
+                Dashboard.alert('Playlist \'' + data.Name + '\' created with ' + data.ItemCount + ' episodes.');
+            } else {
+                Dashboard.alert('Failed to create playlist: HTTP ' + xhr.status);
+            }
+        };
+        xhr.onerror = () => {
+            Dashboard.hideLoadingMsg();
+            Dashboard.alert('Failed to create playlist: Network error.');
+        };
+        xhr.send();
+    }
+
     refreshNow() {
         Dashboard.showLoadingMsg();
         var xhr = new XMLHttpRequest();
@@ -118,6 +139,13 @@ export default class WikipediaEpisodeOrderPreviewPage {
         if (btnRefresh) {
             btnRefresh.addEventListener('click', () => {
                 if (this._seriesId) this.refreshNow();
+            });
+        }
+
+        var btnCreate = this.qs('btnCreatePlaylist');
+        if (btnCreate) {
+            btnCreate.addEventListener('click', () => {
+                if (this._seriesId) this.createPlaylist();
             });
         }
 
