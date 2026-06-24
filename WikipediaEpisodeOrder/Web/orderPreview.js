@@ -26,14 +26,14 @@ export default class WikipediaEpisodeOrderPreviewPage {
     qs(id) { return this._view.querySelector('#' + id); }
 
     rowClass(entry) {
-        if (!entry.matched) return 'weo-row-unmatched';
-        if (entry.confidence < 95) return 'weo-row-partial';
+        if (!entry.Matched) return 'weo-row-unmatched';
+        if (entry.Confidence < 95) return 'weo-row-partial';
         return 'weo-row-matched';
     }
 
     statusBadge(entry) {
-        if (!entry.matched) return '<span class="weo-badge weo-badge-unmatched">Unmatched</span>';
-        if (entry.confidence < 95) return '<span class="weo-badge weo-badge-partial">Partial</span>';
+        if (!entry.Matched) return '<span class="weo-badge weo-badge-unmatched">Unmatched</span>';
+        if (entry.Confidence < 95) return '<span class="weo-badge weo-badge-partial">Partial</span>';
         return '<span class="weo-badge weo-badge-matched">Matched</span>';
     }
 
@@ -42,16 +42,16 @@ export default class WikipediaEpisodeOrderPreviewPage {
         if (!tbody) return;
 
         tbody.innerHTML = entries.map((e) => {
-            var specialBadge = e.isSpecial ? '<span class="weo-badge weo-badge-special">Special</span>' : '';
-            var confidence = e.matched ? Math.round(e.confidence) + '%' : '—';
-            var jellyfinTitle = e.matched ? escapeHtml(e.jellyfinTitle || '') : '<em style="opacity:0.5">not found</em>';
+            var specialBadge = e.IsSpecial ? '<span class="weo-badge weo-badge-special">Special</span>' : '';
+            var confidence = e.Matched ? Math.round(e.Confidence) + '%' : '—';
+            var jellyfinTitle = e.Matched ? escapeHtml(e.JellyfinTitle || '') : '<em style="opacity:0.5">not found</em>';
             return '<tr class="' + this.rowClass(e) + '">' +
-                '<td>' + e.position + '</td>' +
-                '<td>' + escapeHtml(e.wikiTitle) + specialBadge + '</td>' +
+                '<td>' + e.Position + '</td>' +
+                '<td>' + escapeHtml(e.WikiTitle) + specialBadge + '</td>' +
                 '<td>' + jellyfinTitle + '</td>' +
                 '<td>' + this.statusBadge(e) + '</td>' +
                 '<td>' + confidence + '</td>' +
-                '<td>' + escapeHtml(e.matchMethod || '') + '</td>' +
+                '<td>' + escapeHtml(e.MatchMethod || '') + '</td>' +
                 '</tr>';
         }).join('');
     }
@@ -74,11 +74,11 @@ export default class WikipediaEpisodeOrderPreviewPage {
                 var data = JSON.parse(xhr.responseText);
                 this.qs('loadingMsg').style.display = 'none';
                 this.qs('previewContent').style.display = 'block';
-                this.qs('statMatched').textContent = data.matchedCount;
-                this.qs('statUnmatched').textContent = data.unmatchedCount;
-                this.qs('statTotal').textContent = (data.entries || []).length;
-                this.qs('statRefresh').textContent = formatDate(data.lastRefreshUtc);
-                this.renderTable(data.entries || []);
+                this.qs('statMatched').textContent = data.MatchedCount;
+                this.qs('statUnmatched').textContent = data.UnmatchedCount;
+                this.qs('statTotal').textContent = (data.Entries || []).length;
+                this.qs('statRefresh').textContent = formatDate(data.LastRefreshUtc);
+                this.renderTable(data.Entries || []);
             } else {
                 this.showError('Could not load preview. Status ' + xhr.status + '. Try refreshing the series from Wikipedia first.');
             }
