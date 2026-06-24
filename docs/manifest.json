@@ -1,0 +1,21 @@
+[
+  {
+    "guid": "a8cba4a4-65b8-4a7e-9f0e-b3e56b6e3b7b",
+    "name": "Wikipedia Episode Order",
+    "description": "Fetches episode order from Wikipedia and creates a Jellyfin playlist for correct viewing order.",
+    "overview": "Uses Wikipedia episode list pages to match and order episodes in your Jellyfin library, then creates a playlist for playback in the correct order.",
+    "owner": "Neil Manfred",
+    "category": "Metadata",
+    "imageUrl": "https://raw.githubusercontent.com/neilmanfredit/wikiepisodeorder-jellyfin-plugin/main/docs/icon.png",
+    "versions": [
+      {
+        "version": "1.0.25.0",
+        "changelog": "First fully working release. Series search, episode matching, preview, and playlist creation.",
+        "targetAbi": "10.11.10.0",
+        "sourceUrl": "https://github.com/neilmanfredit/wikiepisodeorder-jellyfin-plugin/releases/download/v1.0.25/WikipediaEpisodeOrder-v1.0.25.tar.gz",
+        "checksum": "725efabf25e4b97e5de57ef593f63079",
+        "timestamp": "2026-06-24T00:00:00Z"
+      }
+    ]
+  }
+]

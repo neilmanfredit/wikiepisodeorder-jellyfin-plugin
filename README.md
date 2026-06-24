@@ -8,6 +8,16 @@ A [Jellyfin](https://jellyfin.org) plugin that fetches Wikipedia episode list pa
 
 ---
 
+## Installing via Jellyfin Plugin Repository (Recommended)
+
+1. In Jellyfin, go to **Dashboard → Plugins → Repositories**
+2. Click **Add** and enter this URL: https://neilmanfredit.github.io/wikiepisodeorder-jellyfin-plugin/manifest.json
+3. Click **Save**, then go to **Dashboard → Plugins → Catalogue**
+4. Find **Wikipedia Episode Order** and click **Install**
+5. Restart Jellyfin when prompted
+
+---
+
 ## What it does
 
 Wikipedia episode list pages encode the actual broadcast order of a TV series, including specials, Christmas episodes, TV movies, and reunion specials placed at their correct chronological positions. This plugin reads those pages, matches each episode against your Jellyfin library, and creates a playlist in that order so you can watch a series in the sequence it was originally broadcast.
