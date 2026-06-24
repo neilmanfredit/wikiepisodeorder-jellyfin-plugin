@@ -15,8 +15,9 @@ export default class WikipediaEpisodeOrderPreviewPage {
     constructor(view, params) {
         this._view = view;
         this._apiBase = '/WikipediaOrder';
-        this._seriesId = params.seriesId || '';
-        this._seriesName = params.seriesName || 'Series';
+        var _hp = new URLSearchParams(window.location.hash.split('?')[1] || '');
+        this._seriesId = (params && params.seriesId) || _hp.get('seriesId') || '';
+        this._seriesName = (params && params.seriesName) || _hp.get('seriesName') || 'Series';
 
         view.addEventListener('viewshow', () => {
             this.init();
