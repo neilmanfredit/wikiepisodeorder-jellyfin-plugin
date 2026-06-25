@@ -26,6 +26,26 @@ Wikipedia episode list pages encode the actual broadcast order of a TV series, i
 
 Episodes not present in your Jellyfin library are excluded from the playlist. The playlist is named `{Series Name} — Wikipedia Order` and appears under Playlists in Jellyfin.
 
+This is useful for series that bounce between specials and series and back again — a good example is [Only Fools and Horses](https://en.wikipedia.org/wiki/List_of_Only_Fools_and_Horses_episodes), which was used to build and test this plugin.
+
+### Configuration
+
+Add a series mapping by searching your Jellyfin library and pasting the Wikipedia episode list URL.
+
+![Configuration page](docs/screenshots/Wiki-Config-page.png)
+
+### Episode order preview
+
+Before creating a playlist, the preview page shows every Wikipedia episode matched against your Jellyfin library, with confidence score and match method.
+
+![Episode order preview](docs/screenshots/Wiki-Order-Preview.png)
+
+### Playlist in Jellyfin
+
+Once created, the playlist appears under Playlists in Jellyfin with episodes in the correct broadcast order, including specials placed chronologically.
+
+![Playlist in Jellyfin](docs/screenshots/Wiki-Playlist-Preview.png)
+
 ---
 
 ## Requirements
