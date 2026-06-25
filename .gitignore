@@ -6,3 +6,9 @@ obj/
 .idea/
 *.suo
 TestResults/
+
+# Local tool files
+.aider*
+.claude/
+.repo-files.txt
+releases/
