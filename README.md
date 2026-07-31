@@ -55,7 +55,7 @@ Once created, the playlist appears under Playlists in Jellyfin with episodes in 
 
 ---
 
-## Installation
+## Installation (Linux)
 
 1. Download `WikipediaEpisodeOrder-v1.0.25.tar.gz` from the [GitHub releases page](https://github.com/neilmanfredit/wikiepisodeorder-jellyfin-plugin/releases).
 
@@ -87,6 +87,21 @@ Once created, the playlist appears under Playlists in Jellyfin with episodes in 
 6. Verify: Dashboard → Plugins → Wikipedia Episode Order should show **Status: Active**.
 
 ---
+
+## Installation (Windows)
+
+1. Download the latest WikipediaEpisodeOrder-v1.0.25.zip from the [GitHub releases page](https://github.com/neilmanfredit/wikiepisodeorder-jellyfin-plugin/releases).
+
+2. Locate your Jellyfin plugins folder (usually C:\ProgramData\Jellyfin\Server\data\plugins).
+
+3. Create a new folder named Wikipedia Episode Order.
+
+4. Extract the contents of the downloaded .zip file into this folder.
+
+5. Restart the Jellyfin server.
+
+6. Verify: Dashboard → Plugins → Wikipedia Episode Order should show **Status: Active**.
+
 
 ## Usage
 
