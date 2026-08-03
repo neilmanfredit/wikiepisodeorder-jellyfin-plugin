@@ -1,0 +1,92 @@
+name: Release Plugin
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  release:
+    name: Build, Package, and Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Setup .NET 9 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          FULL_VERSION="${VERSION}.0"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "full_version=$FULL_VERSION" >> "$GITHUB_OUTPUT"
+          echo "zipname=WikipediaEpisodeOrder-${TAG}.zip" >> "$GITHUB_OUTPUT"
+
+      - name: Restore dependencies
+        run: dotnet restore WikipediaEpisodeOrder.sln
+
+      - name: Build (Release)
+        run: dotnet build WikipediaEpisodeOrder.sln -c Release --no-restore
+
+      - name: Collect plugin files
+        run: |
+          mkdir -p artifacts/plugin
+          cp WikipediaEpisodeOrder/bin/Release/net9.0/Jellyfin.Plugin.WikipediaEpisodeOrder.dll artifacts/plugin/
+          cp WikipediaEpisodeOrder/bin/Release/net9.0/HtmlAgilityPack.dll artifacts/plugin/ 2>/dev/null || true
+          cp WikipediaEpisodeOrder/bin/Release/net9.0/AngleSharp.dll artifacts/plugin/ 2>/dev/null || true
+          cp WikipediaEpisodeOrder/bin/Release/net9.0/FuzzySharp.dll artifacts/plugin/ 2>/dev/null || true
+          cp WikipediaEpisodeOrder/bin/Release/net9.0/meta.json artifacts/plugin/ 2>/dev/null || true
+
+      - name: Create plugin zip
+        run: |
+          cd artifacts
+          zip -j "${{ steps.version.outputs.zipname }}" plugin/*
+
+      - name: Compute MD5 checksum
+        id: checksum
+        run: |
+          MD5=$(md5sum "artifacts/${{ steps.version.outputs.zipname }}" | awk '{print $1}')
+          echo "md5=$MD5" >> "$GITHUB_OUTPUT"
+
+      - name: Update manifest.json checksum
+        run: |
+          FULL_VERSION="${{ steps.version.outputs.full_version }}"
+          MD5="${{ steps.checksum.outputs.md5 }}"
+          jq --arg ver "$FULL_VERSION" --arg md5 "$MD5" \
+            '.[0].versions |= map(if .version == $ver then .checksum = $md5 else . end)' \
+            docs/manifest.json > docs/manifest.json.tmp
+          mv docs/manifest.json.tmp docs/manifest.json
+
+      - name: Commit and push manifest checksum update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/manifest.json
+          git diff --staged --quiet || git commit -m "chore: update manifest.json checksum for ${{ steps.version.outputs.tag }}"
+          git push origin HEAD:main
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
+          files: artifacts/${{ steps.version.outputs.zipname }}
+          generate_release_notes: true
