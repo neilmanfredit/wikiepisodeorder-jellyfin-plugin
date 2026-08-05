@@ -67,16 +67,10 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore WikipediaEpisodeOrder.sln
 
-      - name: Build Release
-        run: dotnet build WikipediaEpisodeOrder.sln -c Release --no-restore
-
-      - name: Collect plugin DLLs
+      - name: Build Release into artifacts/plugin
         run: |
-          mkdir -p artifacts/plugin
-          cp WikipediaEpisodeOrder/bin/Release/net8.0/Jellyfin.Plugin.WikipediaEpisodeOrder.dll artifacts/plugin/
-          cp WikipediaEpisodeOrder/bin/Release/net8.0/HtmlAgilityPack.dll artifacts/plugin/ 2>/dev/null || true
-          cp WikipediaEpisodeOrder/bin/Release/net8.0/AngleSharp.dll artifacts/plugin/ 2>/dev/null || true
-          cp WikipediaEpisodeOrder/bin/Release/net8.0/FuzzySharp.dll artifacts/plugin/ 2>/dev/null || true
+          dotnet build WikipediaEpisodeOrder.sln -c Release --no-restore -o artifacts/plugin
+          ls -la artifacts/plugin || true
 
       - name: Extract version
         id: version
