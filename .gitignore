@@ -9,7 +9,8 @@ TestResults/
 
 # Local tool files
 .aider*
-.claude/
+.claude/*
+!.claude/settings.json
 .repo-files.txt
 releases/
 *.tar.gz
