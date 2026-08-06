@@ -59,18 +59,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup .NET 8 SDK
+      - name: Setup .NET 9 SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '9.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore WikipediaEpisodeOrder.sln
+        run: dotnet restore WikipediaEpisodeOrder/WikipediaEpisodeOrder.csproj
 
       - name: Build Release into artifacts/plugin
         run: |
-          dotnet build WikipediaEpisodeOrder.sln -c Release --no-restore -o artifacts/plugin
-          ls -la artifacts/plugin || true
+          dotnet build WikipediaEpisodeOrder/WikipediaEpisodeOrder.csproj -c Release --no-restore -o artifacts/plugin
+          ls -la artifacts/plugin
 
       - name: Extract version
         id: version
