@@ -16,3 +16,4 @@ releases/
 *.tar.gz
 *.zip
 .claude/
+.claude/
